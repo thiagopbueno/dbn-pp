@@ -1,6 +1,8 @@
 *~
 .DS_Store
 
+dbn.dSYM/
+
 # Compiled Object files
 *.slo
 *.lo
