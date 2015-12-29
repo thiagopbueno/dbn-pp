@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <cassert>
+#include <cmath>
 
 #include "io.h"
 #include "variable.h"
@@ -16,6 +18,22 @@ void print_model(vector<msp::Variable> variables, vector<msp::Factor> factors)
     cout << endl;
 }
 
+bool check_marginal_probability_distribution(msp::Factor factor)
+{
+    double total = 0.0;
+    for (vector<double>::iterator it=factor.begin(); it!=factor.end(); ++it) {
+        total += *it;
+    }
+    return (abs(total - 1.0) < 0.001);
+}
+
+void test_variable_elimination(vector<msp::Variable> ordering, vector<msp::Factor> factors)
+{
+	msp::Factor result = msp::variable_elimination(ordering, factors);
+	cout << result << endl;
+	assert(check_marginal_probability_distribution(result));
+}
+
 int main(int argc, char *argv[])
 {
     vector<msp::Variable> variables;
@@ -25,7 +43,12 @@ int main(int argc, char *argv[])
     print_model(variables, factors);
 
     cout << ">> Variable elimination:" << endl;
-    cout << msp::variable_elimination(variables, factors) << endl;
+    vector<msp::Variable> ordering;
+    test_variable_elimination(ordering, factors);
+    for (auto v: variables) {
+		ordering.push_back(v);
+		test_variable_elimination(ordering, factors);
+    }
 
-	return 0;
+    return 0;
 }
