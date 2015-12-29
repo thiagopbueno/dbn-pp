@@ -1,0 +1,24 @@
+# Enough Sleep Student Problem
+#
+# HMM extracted from exercices 15.13 and 15.14 of the textbook 
+# Artificial Intelligence: A Modern Approach - 3rd Edition
+# by Stuart Russel, Peter Norvig
+#
+# VARIABLES
+# 0  S  {true, false}
+# 1  S' {true, false}
+# 2  R  {true, false}
+# 3  C  {true, false}
+#
+BAYES
+4
+2 2 2 2
+4
+1 0
+2 1 0
+2 2 0
+2 3 0
+2 0.3 0.7
+4 0.7 0.2 0.3 0.8
+4 0.3 0.8 0.7 0.2
+4 0.7 0.9 0.3 0.1
