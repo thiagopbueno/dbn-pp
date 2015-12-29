@@ -16,25 +16,26 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DBN.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef _DBN_VARIABLE_H
-#define _DBN_VARIABLE_H
+#ifndef _DBN_MODEL_H
+#define _DBN_MODEL_H
 
-#include <ostream>
+#include "variable.h"
 
 namespace dbn {
-
-    class Variable {
+	
+    class Model {
     public:
-        Variable(unsigned id, unsigned size) : _id(id), _size(size) { }
+        Model(unsigned order, unsigned cardinality[]);
+        virtual ~Model();
 
-        unsigned id() const { return _id; }
-        unsigned size() const { return _size; }
+        unsigned order() const { return _order; };
+        Variable **variables() const { return _vars; };
 
-        friend std::ostream &operator<<(std::ostream &o, const Variable &v);
+        friend std::ostream &operator<<(std::ostream &o, const Model &m);
 
     private:
-        unsigned _id;
-        unsigned _size;
+        unsigned _order;
+        Variable **_vars;
     };
 
 }

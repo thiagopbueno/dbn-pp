@@ -1,54 +1,40 @@
-#include <iostream>
-#include <vector>
-#include <cassert>
-#include <cmath>
+// Copyright (c) 2015 Thiago Pereira Bueno
+// All Rights Reserved.
+//
+// This file is part of DBN library.
+//
+// DBN is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// DBN is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DBN.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "io.h"
-#include "variable.h"
-#include "factor.h"
-#include "inference.h"
+#include "model.h"
 
-using namespace std;
+#include <iostream>
+#include <memory>
 
-void print_model(vector<msp::Variable> variables, vector<msp::Factor> factors)
-{
-    cout << ">> Model: " << variables.size() << " variables, " << factors.size() << " factors. " << endl;
-    for (auto v: variables) { cout << v << endl; }
-    for (auto f: factors)   { cout << f << endl; }
-    cout << endl;
-}
-
-bool check_marginal_probability_distribution(msp::Factor factor)
-{
-    double total = 0.0;
-    for (vector<double>::iterator it=factor.begin(); it!=factor.end(); ++it) {
-        total += *it;
-    }
-    return (abs(total - 1.0) < 0.001);
-}
-
-void test_variable_elimination(vector<msp::Variable> ordering, vector<msp::Factor> factors)
-{
-	msp::Factor result = msp::variable_elimination(ordering, factors);
-	cout << result << endl;
-	assert(check_marginal_probability_distribution(result));
-}
+using namespace dbn;
 
 int main(int argc, char *argv[])
 {
-    vector<msp::Variable> variables;
-    vector<msp::Factor> factors;
+    unsigned order;
+    unsigned *cardinality;
 
-    msp::load_uai_model(variables, factors);
-    print_model(variables, factors);
+    read_uai_model(order, &cardinality);
 
-    cout << ">> Variable elimination:" << endl;
-    vector<msp::Variable> ordering;
-    test_variable_elimination(ordering, factors);
-    for (auto v: variables) {
-		ordering.push_back(v);
-		test_variable_elimination(ordering, factors);
-    }
+    std::unique_ptr<Model> m{new Model(order, cardinality)};
+    std::cout << *m << std::endl;
+
+    delete[] cardinality;
 
     return 0;
 }

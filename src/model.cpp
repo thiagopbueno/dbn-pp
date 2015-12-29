@@ -16,27 +16,33 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DBN.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef _DBN_VARIABLE_H
-#define _DBN_VARIABLE_H
-
-#include <ostream>
+#include "model.h"
 
 namespace dbn {
 
-    class Variable {
-    public:
-        Variable(unsigned id, unsigned size) : _id(id), _size(size) { }
+	Model::Model(unsigned order, unsigned cardinality[]) : _order(order) {
+		_vars = (Variable **) malloc (_order * sizeof (Variable *));
+		for (unsigned id = 0; id < _order; ++id) {
+			_vars[id] = new Variable(id, cardinality[id]);
+		}
+	}
 
-        unsigned id() const { return _id; }
-        unsigned size() const { return _size; }
+	Model::~Model() {
+		for (unsigned id = 0; id < _order; ++id) {
+			delete _vars[id];
+		}
+		delete[] _vars;
+	}
 
-        friend std::ostream &operator<<(std::ostream &o, const Variable &v);
+	std::ostream& operator<<(std::ostream &o, const Model &m) {
+        o << "Model(order:" << m.order() << ")" << std::endl;
 
-    private:
-        unsigned _id;
-        unsigned _size;
-    };
+        o << ">> Variables:" << std::endl;
+        Variable **vars = m.variables();
+        for (unsigned id = 0; id < m.order(); ++id) {
+        	o << *(vars[id]) << std::endl;
+        }
+        return o;
+    }
 
 }
-
-#endif
