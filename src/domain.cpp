@@ -75,10 +75,10 @@ namespace msp {
   std::ostream& operator<<(std::ostream &o, const Domain &d) {
     o << "Domain(width:" << d.width() << ", lg_size:" << log2(d.size()) << ", scope:{";
     if (d.width() <= MSP_DIS_MAX_VARS)
-      for (int i=0; i < d.width(); ++i) { o << *(d[i]); if (i < d.width()-1) o << ", "; }
+      for (int i=0; i < d.width(); ++i) { o << d[i]->name(); if (i < d.width()-1) o << ", "; }
     else 
       {
-	for (int i=0; i < MSP_DIS_MAX_VARS-1; ++i) o << *(d[i]) << ", "; 
+	for (int i=0; i < MSP_DIS_MAX_VARS-1; ++i) o << d[i]->name() << ", "; 
 	o << "..., " << *(d[d.width()-1]);
       }
     o << "})";
@@ -89,10 +89,10 @@ namespace msp {
   std::ostream& operator<<(std::ostream &o, Domain &d) {
     o << "Domain(width:" << d.width() << ", lg_size:" << log2(d.size()) << ", scope:{";
     if (d.width() <= MSP_DIS_MAX_VARS)
-      for (int i=0; i < d.width(); ++i) { o << *(d[i]); if (i < d.width()-1) o << ", "; }
+      for (int i=0; i < d.width(); ++i) { o << d[i]->name(); if (i < d.width()-1) o << ", "; }
     else 
       {
-	for (int i=0; i < MSP_DIS_MAX_VARS-1; ++i) o << *(d[i]) << ", "; 
+	for (int i=0; i < MSP_DIS_MAX_VARS-1; ++i) o << d[i]->name() << ", "; 
 	o << "..., " << *(d[d.width()-1]);
       }
     o << "})";
