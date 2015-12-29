@@ -17,6 +17,7 @@
 // along with DBN.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "io.h"
+#include "domain.h"
 
 #include <iostream>
 #include <string>
@@ -32,26 +33,45 @@ namespace dbn {
         return false;
     }
 
-    int read_uai_model(unsigned &order, unsigned **cardinality) {
+    int read_uai_model(unsigned &order, Variable ***variables) {
         std::string token;
 
-        // file header
+        // read file header
         read_next_token(token);
         if (token.compare("BAYES") != 0)  {
             std::cerr << "ERROR! Expected 'BAYES' file header, found: " << token << std::endl;
             return -1;
         }
 
+        // read number of variables
         read_next_token(token);
-
-        // number of variables
         order = std::stoi(token);
 
         // read variables
-        *cardinality = new unsigned[order];
-        for (unsigned i = 0; i < order; ++i) {
+        *variables = (Variable **) malloc (order * sizeof (Variable *));
+        for (unsigned id = 0; id < order; ++id) {
             read_next_token(token);
-            (*cardinality)[i] = std::stoi(token);
+            (*variables)[id] = new Variable(id, std::stoi(token));
+        }
+
+        // read domains
+        read_next_token(token);
+        unsigned ndomains = std::stoi(token);
+
+        for (unsigned i = 0; i < ndomains; ++i) {
+
+            read_next_token(token);
+            unsigned width = std::stoi(token);
+
+            Variable **scope = (Variable **) malloc(width * sizeof (Variable*));
+            for (unsigned j = 0; j < width; ++j) {
+                read_next_token(token);
+                scope[j] = (*variables)[std::stoi(token)];
+            }
+
+            Domain *d = new Domain(scope, width);
+            std::cout << *d << std::endl;
+            delete d;
         }
 
         return 0;

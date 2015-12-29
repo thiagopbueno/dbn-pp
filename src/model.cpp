@@ -20,13 +20,6 @@
 
 namespace dbn {
 
-	Model::Model(unsigned order, unsigned cardinality[]) : _order(order) {
-		_vars = (Variable **) malloc (_order * sizeof (Variable *));
-		for (unsigned id = 0; id < _order; ++id) {
-			_vars[id] = new Variable(id, cardinality[id]);
-		}
-	}
-
 	Model::~Model() {
 		for (unsigned id = 0; id < _order; ++id) {
 			delete _vars[id];

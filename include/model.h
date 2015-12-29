@@ -25,7 +25,7 @@ namespace dbn {
 	
     class Model {
     public:
-        Model(unsigned order, unsigned cardinality[]);
+        Model(unsigned order, Variable **vars) : _order(order), _vars(vars) { };
         virtual ~Model();
 
         unsigned order() const { return _order; };

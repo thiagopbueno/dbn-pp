@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DBN.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "variable.h"
 #include "io.h"
 #include "model.h"
 
@@ -27,14 +28,12 @@ using namespace dbn;
 int main(int argc, char *argv[])
 {
     unsigned order;
-    unsigned *cardinality;
+    Variable **variables;
 
-    read_uai_model(order, &cardinality);
+    read_uai_model(order, &variables);
 
-    std::unique_ptr<Model> m{new Model(order, cardinality)};
+    std::unique_ptr<Model> m{new Model(order, variables)};
     std::cout << *m << std::endl;
-
-    delete[] cardinality;
 
     return 0;
 }

@@ -19,11 +19,11 @@
 #ifndef _DBN_IO_FILE_H
 #define _DBN_IO_FILE_H
 
-#include "model.h"
+#include "variable.h"
 
 namespace dbn {
 
-	int read_uai_model(unsigned &order, unsigned **cardinality);
+	int read_uai_model(unsigned &order, Variable ***variables);
 
 }
 
