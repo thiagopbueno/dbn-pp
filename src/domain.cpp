@@ -18,13 +18,13 @@
 
 #include "domain.h"
 
-#include <vector>
-
 namespace dbn {
 
     Domain::Domain(Variable **scope, unsigned width) : _scope(scope), _width(width) {
+        _offset = new unsigned[_width];
         _size = 1;
         for (unsigned i = 0; i < _width; ++i) {
+            _offset[i] = _size;
             _size *= _scope[i]->size();
             _var_to_index[_scope[i]->id()] = i;
         }
@@ -32,62 +32,15 @@ namespace dbn {
 
     Domain::~Domain() {
         delete[] _scope;
+        delete[] _offset;
     }
 
     unsigned Domain::position(unsigned instantiation[]) {
         unsigned pos = 0;
-        unsigned offset = 1;
         for (unsigned i = 0; i < _width; ++i) {
-            pos += instantiation[i] * offset;
-            offset *= _scope[i-1]->size();
+            pos += instantiation[i] * _offset[i];
         }
         return pos;
-    }
-
-    Domain* Domain::union_of(const Domain* d1, const Domain* d2) {
-        std::vector<Variable* > scope;
-        unsigned total_width;
-
-        unsigned width1 = d1->width();
-        total_width = width1;
-
-        for (unsigned i = 0; i < width1; ++i) {
-            scope.push_back((*d1)[i]);
-        }
-
-        unsigned width2 = d2->width();
-        for (unsigned i = 0; i < width2; ++i) {
-            if (_var_to_index.find((*d2)[i]->id()) == _var_to_index.end()) {
-                scope.push_back((*d2)[i]);
-                total_width++;
-            }
-        }
-
-        return new Domain(&scope[0], total_width);
-    }
-
-    Domain* Domain::union_of(const Domain* d1, const Domain* d2, const Variable* v) {
-        std::vector<Variable* > scope;
-        unsigned total_width;
-
-        unsigned width1 = d1->width();
-        total_width = width1;
-
-        for (unsigned i = 0; i < width1; ++i) {
-            if (_var_to_index.find((*d1)[i]->id()) == _var_to_index.end()) {
-                scope.push_back((*d1)[i]);
-            }
-        }
-
-        unsigned width2 = d2->width();
-        for (unsigned i = 0; i < width2; ++i) {
-            if (_var_to_index.find((*d2)[i]->id()) == _var_to_index.end()) {
-                scope.push_back((*d2)[i]);
-                total_width++;
-            }
-        }
-
-        return new Domain(&scope[0], total_width);
     }
 
     std::ostream& operator<<(std::ostream &o, const Domain &d) {
