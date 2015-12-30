@@ -27,7 +27,7 @@ namespace dbn {
     public:
         Variable(unsigned id, unsigned size) : _id(id), _size(size) { }
 
-        unsigned id() const { return _id; }
+        unsigned id()   const { return _id;   }
         unsigned size() const { return _size; }
 
         friend std::ostream &operator<<(std::ostream &o, const Variable &v);

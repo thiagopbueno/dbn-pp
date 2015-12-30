@@ -20,19 +20,13 @@
 
 namespace dbn {
 
-    Domain::Domain(Variable **scope, unsigned width) : _scope(scope), _width(width) {
-        _offset = new unsigned[_width];
+    Domain::Domain(std::vector<Variable* > scope, unsigned width) : _scope(scope), _width(width) {
         _size = 1;
         for (unsigned i = 0; i < _width; ++i) {
-            _offset[i] = _size;
+            _offset.push_back(_size);
             _size *= _scope[i]->size();
             _var_to_index[_scope[i]->id()] = i;
         }
-    }
-
-    Domain::~Domain() {
-        delete[] _scope;
-        delete[] _offset;
     }
 
     unsigned Domain::position(unsigned instantiation[]) {
@@ -48,9 +42,9 @@ namespace dbn {
         o << "Domain{";
         unsigned i;
         for (i = 0; i < width-1; ++i) {
-            o << d[i]->id() << ", ";
+            o << d[i].id() << ", ";
         }
-        o << d[i]->id() << "}";
+        o << d[i].id() << "}";
         return o;
     }
 

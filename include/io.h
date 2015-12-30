@@ -22,9 +22,12 @@
 #include "variable.h"
 #include "factor.h"
 
+#include <vector>
+#include <memory>
+
 namespace dbn {
 
-	int read_uai_model(unsigned &order, Variable ***variables, Factor ***factors);
+	int read_uai_model(unsigned &order, std::vector<std::unique_ptr<Variable> > &variables, std::vector<std::unique_ptr<Factor> > &factors);
 
 }
 

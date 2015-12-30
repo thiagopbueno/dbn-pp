@@ -18,10 +18,11 @@
 
 #include "io.h"
 #include "domain.h"
-#include "factor.h"
 
 #include <iostream>
 #include <string>
+#include <vector>
+#include <memory>
 
 namespace dbn {
 
@@ -34,54 +35,70 @@ namespace dbn {
         return false;
     }
 
-    int read_uai_model(unsigned &order, Variable ***variables, Factor ***factors) {
+    bool read_next_integer(unsigned &i) {
         std::string token;
+        if (!read_next_token(token)) return false;
+        i = std::stoi(token);
+        return true;
+    }
 
-        // read file header
+    bool read_next_double(double &d) {
+        std::string token;
+        if (!read_next_token(token)) return false;
+        d = std::stod(token);
+        return true;
+    }
+
+    std::string read_file_header() {
+        std::string token;
         read_next_token(token);
         if (token.compare("BAYES") != 0)  {
             std::cerr << "ERROR! Expected 'BAYES' file header, found: " << token << std::endl;
-            return -1;
         }
+        return token;
+    }
 
-        // read number of variables
-        read_next_token(token);
-        order = std::stoi(token);
-
-        // read variables
-        *variables = (Variable **) malloc (order * sizeof (Variable *));
+    void read_variables(unsigned order, std::vector<std::unique_ptr<Variable> > &variables) {
+        unsigned sz;
         for (unsigned id = 0; id < order; ++id) {
-            read_next_token(token);
-            (*variables)[id] = new Variable(id, std::stoi(token));
+            read_next_integer(sz);
+            std::unique_ptr<Variable> v(new Variable(id, sz));
+            variables.push_back(std::move(v));
         }
+    }
 
-        // read domains and factors
-        *factors = (Factor **) malloc (order * sizeof (Factor*));
-
+    void read_factors(unsigned order, std::vector<std::unique_ptr<Variable> > &variables, std::vector<std::unique_ptr<Factor> > &factors) {
+        unsigned width, id;
         for (unsigned i = 0; i < order; ++i) {
+            read_next_integer(width);
 
-            read_next_token(token);
-            unsigned width = std::stoi(token);
-
-            Variable **scope = (Variable **) malloc(width * sizeof (Variable*));
+            std::vector<Variable* > scope;
             for (unsigned j = 0; j < width; ++j) {
-                read_next_token(token);
-                scope[j] = (*variables)[std::stoi(token)];
+                read_next_integer(id);
+                scope.push_back(variables[id].get());
             }
 
-            (*factors)[i] = new Factor(new Domain(scope, width));
+            std::unique_ptr<Factor> factor(new Factor(new Domain(scope, width)));
+            factors.push_back(std::move(factor));
         }
 
+        unsigned factor_size;
+        double value;
         for (unsigned i = 0; i < order; ++i) {
-            read_next_token(token);
-            unsigned factor_size = std::stoi(token);
+            read_next_integer(factor_size);
 
             for (unsigned j = 0; j < factor_size; ++j) {
-                read_next_token(token);
-                (*factors)[i]->set(j, std::stod(token));
+                read_next_double(value);
+                (*(factors[i]))[j] = value;
             }
         }
+    }
 
+    int read_uai_model(unsigned &order, std::vector<std::unique_ptr<Variable> > &variables, std::vector<std::unique_ptr<Factor> > &factors) {
+        read_file_header();
+        read_next_integer(order);
+        read_variables(order, variables);
+        read_factors(order, variables, factors);
         return 0;
     }
 

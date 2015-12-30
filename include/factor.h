@@ -21,26 +21,27 @@
 
 #include "domain.h"
 
+#include <vector>
+#include <memory>
+
 namespace dbn {
 
     class Factor {
     public:
-        Factor(Domain *domain) : _domain(domain), _values(new double[domain->size()]), _width(domain->width()), _size(domain->size()) { };
-        virtual ~Factor();
+        Factor(Domain *domain) : _domain(std::unique_ptr<Domain>(domain)), _values(std::vector<double>(domain->size())) { };
+        // Factor(std::unique_ptr<Domain> domain, double value) : _domain(std::move(domain)), _values(std::vector<double>(domain->size(), value)) { };
 
-        unsigned size() const { return _size; };
-        unsigned width() const { return _width; };
+        const Domain &domain() const { return *_domain; };
+        unsigned size()  const { return _domain->size();  };
+        unsigned width() const { return _domain->width(); };
 
-        double operator[](unsigned i) const;
-        void set(unsigned i, double value);
+        double &operator[](unsigned i);
 
         friend std::ostream &operator<<(std::ostream &o, const Factor &f);
 
     private:
-        Domain *_domain;
-        double *_values;
-        unsigned _width;
-        unsigned _size;
+        std::unique_ptr<Domain> _domain;
+        std::vector<double> _values;
     };
 
 }

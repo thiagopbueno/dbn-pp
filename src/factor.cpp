@@ -22,25 +22,15 @@
 
 namespace dbn {
 
-    Factor::~Factor() {
-        delete _domain;
-        delete[] _values;
-    }
-
-    double Factor::operator[](unsigned i) const { 
-        if (i < _size) return _values[i];
+    double &Factor::operator[](unsigned i) { 
+        if (i < size()) return _values[i];
         else throw "Factor::operator[]: Index out of range.";
     }
 
-    void Factor::set(unsigned i, double value) { 
-      if (i < _size) _values[i] = value;
-      else throw "Factor::set: Index out of range.";
-    }
-
     std::ostream &operator<<(std::ostream &o, const Factor &f) {
-        o << "Factor(" << *(f._domain) << ", size:" << f._size << ", values:[";
+        o << "Factor(" << *(f._domain) << ", size:" << f.size() << ", values:[";
         unsigned i;
-        for (i = 0; i < f._size-1; ++i) { 
+        for (i = 0; i < f.size()-1; ++i) { 
             o << f._values[i] << ", ";
         }
         o << f._values[i] << "])";

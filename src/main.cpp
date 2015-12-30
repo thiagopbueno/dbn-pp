@@ -19,8 +19,10 @@
 #include "variable.h"
 #include "io.h"
 #include "model.h"
+#include "operations.h"
 
 #include <iostream>
+#include <vector>
 #include <memory>
 
 using namespace dbn;
@@ -28,13 +30,21 @@ using namespace dbn;
 int main(int argc, char *argv[])
 {
     unsigned order;
-    Variable **variables;
-    Factor **factors;
+    std::vector<std::unique_ptr<Variable> > variables;
+    std::vector<std::unique_ptr<Factor> > factors;
 
-    read_uai_model(order, &variables, &factors);
+    read_uai_model(order, variables, factors);
+    
+    for (auto const &pv : variables) {
+    	std::cout << *pv << std::endl;
+    }
 
-    std::unique_ptr<Model> m{new Model(order, variables, factors)};
-    std::cout << *m << std::endl;
+    for (auto const &pf : factors) {
+    	std::cout << *pf << std::endl;
+    }
+
+    // std::unique_ptr<Model> m{new Model(order, variables, factors)};
+    // std::cout << *m << std::endl;
 
     return 0;
 }

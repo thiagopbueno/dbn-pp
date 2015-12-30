@@ -21,7 +21,7 @@
 namespace dbn {
 
     std::ostream& operator<<(std::ostream &o, const Variable &v) {
-        o << "Variable(id:" << v.id() << ", size:" << v.size() << ")";
+        o << "Variable(id:" << v._id << ", size:" << v._size << ")";
         return o;
     }
 
