@@ -36,7 +36,15 @@ namespace dbn {
 
         const Variable *operator[](unsigned i) const {
             if (i < _width) return _scope[i];
-            else throw "Domain::operator[]: Index out of range!";
+            else throw "Domain::operator[unsigned i]: Index out of range!";
+        }
+
+        unsigned operator[](const Variable* v) const {
+            if (in_scope(v)) {
+                std::unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find (v->id());
+                return it->second;
+            }
+            else throw "Domain::operator[const Variable*]: Invalid argument!";
         }
 
         bool in_scope(const Variable* v) const {
@@ -44,16 +52,17 @@ namespace dbn {
             return (it != _var_to_index.end());
         }
 
-        unsigned offset(const Variable *v) {
+        unsigned offset(const Variable *v) const {
             if (in_scope(v)) {
-                unsigned i = _var_to_index[v->id()];
+                std::unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find (v->id());
+                unsigned i = it->second;
                 return _offset[i];
             }
             else throw "Domain::offset: Invalid argument!";
         }
 
 
-        unsigned position(unsigned instantiation[]);
+        unsigned position(std::vector<unsigned> instantiation) const;
 
         friend std::ostream &operator<<(std::ostream &o, const Domain &v); 
 

@@ -29,10 +29,10 @@ namespace dbn {
         }
     }
 
-    unsigned Domain::position(unsigned instantiation[]) {
+    unsigned Domain::position(std::vector<unsigned> instantiation) const {
         unsigned pos = 0;
         for (unsigned i = 0; i < _width; ++i) {
-            pos += instantiation[i] * _offset[i];
+            pos += instantiation[i] * _offset[_width - i - 1];
         }
         return pos;
     }

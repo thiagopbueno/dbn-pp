@@ -35,6 +35,7 @@ namespace dbn {
         unsigned size()  const { return _domain->size();  };
         unsigned width() const { return _domain->width(); };
 
+        const double &operator[](unsigned i) const;
         double &operator[](unsigned i);
 
         friend std::ostream &operator<<(std::ostream &o, const Factor &f);

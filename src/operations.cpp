@@ -1,123 +1,121 @@
-// Copyright (c) 2014 Denis Maua
+// Copyright (c) 2015 Thiago Pereira Bueno
 // All Rights Reserved.
 //
-// This file is part of MSP library
+// This file is part of DBN library.
 //
-// MSP is free software: you can redistribute it and/or modify
+// DBN is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// MSP is distributed in the hope that it will be useful,
+// DBN is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with MSP.  If not, see <http://www.gnu.org/licenses/>.
+// along with DBN.  If not, see <http://www.gnu.org/licenses/>.
 
-// This file implements operations on factors and variables
+#include "operations.h"
 
 #include <vector>
-#include "variable.h"
-#include "factor.h"
-#include "operations.h"
-#include "constants.h"
+#include <iostream>
 
-namespace msp {
+namespace dbn {
 
-  /** Factor multiplication 
-   *  @param f1 the first factor
-   *  @param f2 the second factor
-   *  @return the product of f1 and f2
-   */
-  Factor product(const Factor& f1, const Factor& f2) {
+	Domain *union_of(const Domain& d1, const Domain& d2) {
+        std::vector<const Variable* > scope;
+        unsigned total_width;
 
-    Factor res(f1,f2); // creates factor with union domain
+        unsigned width1 = d1.width();
+        total_width = width1;
 
-    unsigned i, j=0, k=0, l;
-    std::vector<unsigned> c(res.width(),0);
-    Variable* v;
+        for (unsigned i = 0; i < width1; ++i) {
+            const Variable *v = d1[i];
+            scope.push_back(v);
+        }
 
-    for (i=0; i<res.size(); i++)
-      {
-	res.set(i, f1[j] * f2[k]);
-	for (l=0; l<res.width(); l++)
-	  {
-	    c[l]++;
-	    v = res.var_at(l);
-	    if (c[l] == v->size())
-	      {
-		c[l] = 0;
-		j -= (v->size()-1)*f1.offset( *v );
-		k -= (v->size()-1)*f2.offset( *v );
-	      }
-	    else
-	      {
-		j += f1.offset( *v ); k += f2.offset( *v );
-		break;
-	      }
-	  }
-      }
+        unsigned width2 = d2.width();
+        for (unsigned i = 0; i < width2; ++i) {
+            const Variable *v = d2[i];
+            if (!d1.in_scope(v)) {
+                scope.push_back(v);
+                total_width++;
+            }
+        }
 
-    return res;
+        return new Domain(scope, total_width);
+    }
 
-  }
+    Domain *union_of(const Domain& d1, const Domain& d2, const Variable* var) {
+        std::vector<const Variable* > scope;
+        unsigned total_width = 0;
 
+        unsigned width1 = d1.width();
 
-  /** Combined factor multiplication and variable elimination 
-   *  @param f1 the first factor
-   *  @param f2 the second factor
-   *  @param var a pointer to a variable
-   *  @return the elimination of var from the product of f1 and f2
-   */
-  Factor sum_product(const Factor& f1, const Factor& f2, const Variable& var) {
+        for (unsigned i = 0; i < width1; ++i) {
+            const Variable *v = d1[i];
+            if (!d1.in_scope(v)) {
+                scope.push_back(v);
+                total_width++;
+            }
+        }
 
-    Factor res(f1,f2,var); // creates factor with union domain setminus var
+        unsigned width2 = d2.width();
+        for (unsigned i = 0; i < width2; ++i) {
+            const Variable *v = d2[i];
+            if (var->id() != v->id() && !d1.in_scope(v)) {
+                scope.push_back(v);
+                total_width++;
+            }
+        }
 
-    unsigned i, j=0, k=0, l, m;
-    std::vector<unsigned> c(res.width()+1,0);
-    Variable* v;
+        return new Domain(scope, total_width);
+    }
 
-    for (i=0; i<res.size(); i++)
-      {
-	for (m=0; m<var.size(); m++) 
-	  {
-	    res.set(i, res[i] + f1[j] * f2[k]);
-	    c[0]++;
-	    if (c[0] == var.size())
-	      {
-		c[0] = 0;
-		j -= (var.size()-1)*f1.offset( var );
-		k -= (var.size()-1)*f2.offset( var );
+    std::vector<unsigned> consistent_instantiation(std::vector<unsigned> inst1, const Domain& d1, const Domain& d2) {
+        std::vector<unsigned> inst2(d2.width());
+        for (unsigned i = 0; i < inst1.size(); ++i) {
+            const Variable *v1 = d1[i];
+            if (d2.in_scope(v1)) {
+                inst2[d2[v1]] = inst1[i];
+            }
+        }
+        return inst2;
+    }
 
-		for (l=1; l<res.width()+1; l++)
-		  {
-		    c[l]++;
-		    v = res.var_at(l-1);
-		    if (c[l] == v->size())
-		      {
-			c[l] = 0;
-			j -= (v->size()-1)*f1.offset( *v );
-			k -= (v->size()-1)*f2.offset( *v );
-		      }
-		    else
-		      {
-			j += f1.offset( *v ); k += f2.offset( *v );
-			break;
-		      }
-		  }
+	std::unique_ptr<Factor> product(const Factor& f1, const Factor& f2) {
 
-	      }
-	    else
-	      {
-		j += f1.offset( var ); k += f2.offset( var );
-	      }
-	  }
-      }
+        const Domain &d1 = f1.domain();
+        const Domain &d2 = f2.domain();
+        Domain *d = union_of(d1, d2);
+		std::unique_ptr<Factor> new_factor(new Factor(d, 0.0));
 
-    return res;
+        std::vector<unsigned> counter(new_factor->width(), 0);
+        for (unsigned i = 0; i < new_factor->size(); ++i) {
 
-  }
+            // consistent instantiation for both factors
+            std::vector<unsigned> inst1 = consistent_instantiation(counter, *d, d1);
+            std::vector<unsigned> inst2 = consistent_instantiation(counter, *d, d2);
+
+            // find position in linearization
+            unsigned pos1 = d1.position(inst1);
+            unsigned pos2 = d2.position(inst2);
+
+            // set product factor value
+            (*new_factor)[i] = f1[pos1] * f2[pos2];
+
+            // update counter
+            unsigned j;
+            for (j = 0; j < counter.size() && counter[j] == 1; ++j) {
+                counter[j] = 0;
+            }
+            if (j < counter.size()) {
+                counter[j] = 1;
+            }
+        }
+
+        return new_factor;
+    }
 
 }

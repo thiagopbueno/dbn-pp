@@ -22,6 +22,11 @@
 
 namespace dbn {
 
+    const double &Factor::operator[](unsigned i) const {
+        if (i < size()) return _values[i];
+        else throw "Factor::operator[]: Index out of range.";
+    }
+
     double &Factor::operator[](unsigned i) { 
         if (i < size()) return _values[i];
         else throw "Factor::operator[]: Index out of range.";

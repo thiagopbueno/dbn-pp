@@ -33,15 +33,30 @@ int main(int argc, char *argv[])
     std::vector<std::unique_ptr<Factor> > factors;
 
     read_uai_model(order, variables, factors);
-    
-    for (auto const &pv : variables) {
-    	std::cout << *pv << std::endl;
-    }
 
-    for (auto const &pf : factors) {
-    	std::cout << *pf << std::endl;
+    std::unique_ptr<Factor> f1 = product(*(factors[0]), *(factors[1]));
+    std::cout << *f1 << std::endl;
+    double prob = 0.0;
+    for (int i = 0; i < f1->size(); ++i) {
+        prob += (*f1)[i];
     }
+    std::cout << "P(True) = " << prob << std::endl;
 
+    std::unique_ptr<Factor> f2 = product(*(f1), *(factors[2]));
+    std::cout << *f2 << std::endl;
+    prob = 0.0;
+    for (int i = 0; i < f2->size(); ++i) {
+        prob += (*f2)[i];
+    }
+    std::cout << "P(True) = " << prob << std::endl;
+
+    std::unique_ptr<Factor> f3 = product(*(f2), *(factors[3]));
+    std::cout << *f3 << std::endl;
+    prob = 0.0;
+    for (int i = 0; i < f3->size(); ++i) {
+        prob += (*f3)[i];
+    }
+    std::cout << "P(True) = " << prob << std::endl;
 
     return 0;
 }
