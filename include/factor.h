@@ -29,7 +29,7 @@ namespace dbn {
     class Factor {
     public:
         Factor(Domain *domain) : _domain(std::unique_ptr<Domain>(domain)), _values(std::vector<double>(domain->size())) { };
-        // Factor(std::unique_ptr<Domain> domain, double value) : _domain(std::move(domain)), _values(std::vector<double>(domain->size(), value)) { };
+        Factor(Domain *domain, double value) : _domain(std::unique_ptr<Domain>(domain)), _values(std::vector<double>(domain->size(), value)) { };
 
         const Domain &domain() const { return *_domain; };
         unsigned size()  const { return _domain->size();  };

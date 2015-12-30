@@ -72,7 +72,7 @@ namespace dbn {
         for (unsigned i = 0; i < order; ++i) {
             read_next_integer(width);
 
-            std::vector<Variable* > scope;
+            std::vector<const Variable* > scope;
             for (unsigned j = 0; j < width; ++j) {
                 read_next_integer(id);
                 scope.push_back(variables[id].get());

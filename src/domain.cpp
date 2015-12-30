@@ -20,7 +20,7 @@
 
 namespace dbn {
 
-    Domain::Domain(std::vector<Variable* > scope, unsigned width) : _scope(scope), _width(width) {
+    Domain::Domain(std::vector<const Variable* > scope, unsigned width) : _scope(scope), _width(width) {
         _size = 1;
         for (unsigned i = 0; i < _width; ++i) {
             _offset.push_back(_size);
@@ -42,9 +42,9 @@ namespace dbn {
         o << "Domain{";
         unsigned i;
         for (i = 0; i < width-1; ++i) {
-            o << d[i].id() << ", ";
+            o << d[i]->id() << ", ";
         }
-        o << d[i].id() << "}";
+        o << d[i]->id() << "}";
         return o;
     }
 

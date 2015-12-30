@@ -1,7 +1,7 @@
 CC=g++
 CCFLAGS=-Wall -ansi -pedantic -std=c++11
 
-OBJ=bin/variable.o bin/domain.o bin/factor.o bin/io.o bin/main.o
+OBJ=bin/variable.o bin/domain.o bin/factor.o bin/io.o bin/operations.o bin/main.o
 
 all: dbn
 

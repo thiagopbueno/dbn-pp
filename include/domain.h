@@ -29,24 +29,24 @@ namespace dbn {
 
     class Domain {
     public:
-        Domain(std::vector<Variable* > scope, unsigned width);
+        Domain(std::vector<const Variable* > scope, unsigned width);
 
         unsigned width() const { return _width; };
         unsigned size()  const { return _size;  };
 
-        const Variable &operator[](unsigned i) const {
-            if (i < _width) return *(_scope[i]);
+        const Variable *operator[](unsigned i) const {
+            if (i < _width) return _scope[i];
             else throw "Domain::operator[]: Index out of range!";
         }
 
-        bool in_scope(const Variable& v) const {
-            std::unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find (v.id());
+        bool in_scope(const Variable* v) const {
+            std::unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find (v->id());
             return (it != _var_to_index.end());
         }
 
-        unsigned offset(const Variable &v) {
+        unsigned offset(const Variable *v) {
             if (in_scope(v)) {
-                unsigned i = _var_to_index[v.id()];
+                unsigned i = _var_to_index[v->id()];
                 return _offset[i];
             }
             else throw "Domain::offset: Invalid argument!";
@@ -58,7 +58,7 @@ namespace dbn {
         friend std::ostream &operator<<(std::ostream &o, const Domain &v); 
 
     private:
-        std::vector<Variable* > _scope;
+        std::vector<const Variable* > _scope;
         std::vector<unsigned> _offset;
         unsigned _width;
         unsigned _size;
