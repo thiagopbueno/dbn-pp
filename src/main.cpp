@@ -18,7 +18,6 @@
 
 #include "variable.h"
 #include "io.h"
-#include "model.h"
 #include "operations.h"
 
 #include <iostream>
@@ -43,8 +42,6 @@ int main(int argc, char *argv[])
     	std::cout << *pf << std::endl;
     }
 
-    // std::unique_ptr<Model> m{new Model(order, variables, factors)};
-    // std::cout << *m << std::endl;
 
     return 0;
 }
