@@ -8,7 +8,10 @@ all: dbn
 dbn: $(OBJ)
 	$(CC) -o $@ $^
 
-bin/%.o: src/%.cpp
+bin/%.o: src/%.cpp include/%.h
+	$(CC) $(CCFLAGS) -I include/ -g -c -o $@ $<
+
+bin/main.o: src/main.cpp
 	$(CC) $(CCFLAGS) -I include/ -g -c -o $@ $<
 
 .PHONY: clean
