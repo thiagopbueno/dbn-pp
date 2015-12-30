@@ -18,6 +18,7 @@
 
 #include "io.h"
 #include "domain.h"
+#include "factor.h"
 
 #include <iostream>
 #include <string>
@@ -33,7 +34,7 @@ namespace dbn {
         return false;
     }
 
-    int read_uai_model(unsigned &order, Variable ***variables) {
+    int read_uai_model(unsigned &order, Variable ***variables, Factor ***factors) {
         std::string token;
 
         // read file header
@@ -54,11 +55,10 @@ namespace dbn {
             (*variables)[id] = new Variable(id, std::stoi(token));
         }
 
-        // read domains
-        read_next_token(token);
-        unsigned ndomains = std::stoi(token);
+        // read domains and factors
+        *factors = (Factor **) malloc (order * sizeof (Factor*));
 
-        for (unsigned i = 0; i < ndomains; ++i) {
+        for (unsigned i = 0; i < order; ++i) {
 
             read_next_token(token);
             unsigned width = std::stoi(token);
@@ -69,9 +69,17 @@ namespace dbn {
                 scope[j] = (*variables)[std::stoi(token)];
             }
 
-            Domain *d = new Domain(scope, width);
-            std::cout << *d << std::endl;
-            delete d;
+            (*factors)[i] = new Factor(new Domain(scope, width));
+        }
+
+        for (unsigned i = 0; i < order; ++i) {
+            read_next_token(token);
+            unsigned factor_size = std::stoi(token);
+
+            for (unsigned j = 0; j < factor_size; ++j) {
+                read_next_token(token);
+                (*factors)[i]->set(j, std::stod(token));
+            }
         }
 
         return 0;

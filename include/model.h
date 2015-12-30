@@ -20,22 +20,26 @@
 #define _DBN_MODEL_H
 
 #include "variable.h"
+#include "factor.h"
 
 namespace dbn {
 	
     class Model {
     public:
-        Model(unsigned order, Variable **vars) : _order(order), _vars(vars) { };
+        Model(unsigned order, Variable **vars, Factor **factors) : _order(order), _vars(vars), _factors(factors) { };
         virtual ~Model();
 
         unsigned order() const { return _order; };
+
         Variable **variables() const { return _vars; };
+        Factor **factors() const { return _factors; };
 
         friend std::ostream &operator<<(std::ostream &o, const Model &m);
 
     private:
         unsigned _order;
         Variable **_vars;
+        Factor **_factors;
     };
 
 }

@@ -20,10 +20,11 @@
 #define _DBN_IO_FILE_H
 
 #include "variable.h"
+#include "factor.h"
 
 namespace dbn {
 
-	int read_uai_model(unsigned &order, Variable ***variables);
+	int read_uai_model(unsigned &order, Variable ***variables, Factor ***factors);
 
 }
 

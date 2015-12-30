@@ -23,18 +23,18 @@ namespace dbn {
 	Model::~Model() {
 		for (unsigned id = 0; id < _order; ++id) {
 			delete _vars[id];
+			delete _factors[id];
 		}
 		delete[] _vars;
+		delete[] _factors;
 	}
 
 	std::ostream& operator<<(std::ostream &o, const Model &m) {
-        o << "Model(order:" << m.order() << ")" << std::endl;
-
-        o << ">> Variables:" << std::endl;
-        Variable **vars = m.variables();
-        for (unsigned id = 0; id < m.order(); ++id) {
-        	o << *(vars[id]) << std::endl;
+        o << "Model(order:" << m._order << ")" << std::endl;
+        for (unsigned id = 0; id < m._order; ++id) {
+        	o << *(m._vars[id]) << " : " << *(m._factors[id]) << std::endl;
         }
+
         return o;
     }
 

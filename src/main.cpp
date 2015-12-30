@@ -29,10 +29,11 @@ int main(int argc, char *argv[])
 {
     unsigned order;
     Variable **variables;
+    Factor **factors;
 
-    read_uai_model(order, &variables);
+    read_uai_model(order, &variables, &factors);
 
-    std::unique_ptr<Model> m{new Model(order, variables)};
+    std::unique_ptr<Model> m{new Model(order, variables, factors)};
     std::cout << *m << std::endl;
 
     return 0;
