@@ -32,9 +32,9 @@ namespace dbn {
 
 		for (auto var: variables) {
 
-			// std::cout << "Eliminating variable: " << *var << std::endl;
+			// std::cout << ">> Eliminating variable: " << *var << std::endl;
 
-			// std::cout << "All factors:" << std::endl;
+			// std::cout << ">> All factors:" << std::endl;
 			// for (auto f : flist) {
 			// 	std::cout << *f << std::endl;
 			// }
@@ -57,12 +57,12 @@ namespace dbn {
 				}
 			}
 
-			// std::cout << "Bucket:" << std::endl;
+			// std::cout << ">> Bucket:" << std::endl;
 			// for (auto f : bucket) {
 			// 	std::cout << *f << std::endl;
 			// }
 
-			// std::cout << "Other factors:" << std::endl;
+			// std::cout << ">> Remaining factors:" << std::endl;
 			// for (auto f : new_flist) {
 			// 	std::cout << *f << std::endl;
 			// }
@@ -74,21 +74,31 @@ namespace dbn {
 				std::unique_ptr<Factor> prod(new Factor(1.0));
 				std::forward_list<std::shared_ptr<Factor> >::const_iterator pf = bucket.begin();
 				while (b > 1) {
+					// std::cout << ">> prod X prod" << std::endl;
+					// std::cout << *prod << std::endl;
+					// std::cout << **pf << std::endl;
+
 					std::unique_ptr<Factor> p(product(*prod, **pf));
+
+					// std::cout << "ANS: ";
+					// std::cout << *p << std::endl;
+
 					prod = std::move(p);
 					pf++;
 					b--;
 				}
 
 				std::unique_ptr<Factor> p(sum_product(*prod, **pf, var));
-				prod = std::move(p);
-				// std::cout << "prod" << std::endl;
-				// std::cout << *f << std::endl;
 
-				new_flist.push_front(std::move(prod));
+				// std::cout << ">> sum_prod" << std::endl;
+				// std::cout << *prod << std::endl;
+				// std::cout << **pf << std::endl;
+				// std::cout << *p << std::endl;
+
+				new_flist.push_front(std::move(p));
 	  		}
 
-	  		// std::cout << "New list:" << std::endl;
+			// std::cout << ">> New list:" << std::endl;
 			// for (auto f : new_flist) {
 			// 	std::cout << *f << std::endl;
 			// }
