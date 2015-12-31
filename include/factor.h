@@ -30,6 +30,7 @@ namespace dbn {
     public:
         Factor(Domain *domain) : _domain(std::unique_ptr<Domain>(domain)), _values(std::vector<double>(domain->size())) { };
         Factor(Domain *domain, double value) : _domain(std::unique_ptr<Domain>(domain)), _values(std::vector<double>(domain->size(), value)) { };
+        Factor(double value) : _domain(std::unique_ptr<Domain>(new Domain)), _values(std::vector<double>(1, value)) { };
 
         const Domain &domain() const { return *_domain; };
         unsigned size()  const { return _domain->size();  };

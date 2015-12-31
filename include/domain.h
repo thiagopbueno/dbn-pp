@@ -30,6 +30,7 @@ namespace dbn {
     class Domain {
     public:
         Domain(std::vector<const Variable* > scope, unsigned width);
+        Domain() : _width(0), _size(1) { };
 
         unsigned width() const { return _width; };
         unsigned size()  const { return _size;  };

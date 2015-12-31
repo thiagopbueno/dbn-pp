@@ -34,29 +34,17 @@ int main(int argc, char *argv[])
 
     read_uai_model(order, variables, factors);
 
-    std::unique_ptr<Factor> f1 = product(*(factors[0]), *(factors[1]));
-    std::cout << *f1 << std::endl;
-    double prob = 0.0;
-    for (int i = 0; i < f1->size(); ++i) {
-        prob += (*f1)[i];
-    }
-    std::cout << "P(True) = " << prob << std::endl;
+    std::unique_ptr<Factor> f0(new Factor(1.0));
 
-    std::unique_ptr<Factor> f2 = product(*(f1), *(factors[2]));
-    std::cout << *f2 << std::endl;
-    prob = 0.0;
-    for (int i = 0; i < f2->size(); ++i) {
-        prob += (*f2)[i];
-    }
-    std::cout << "P(True) = " << prob << std::endl;
+    std::unique_ptr<Factor> f = std::move(f0);
+    for (unsigned i = 0; i < order; ++i) {
+        f = product(*f, *(factors[i]));
 
-    std::unique_ptr<Factor> f3 = product(*(f2), *(factors[3]));
-    std::cout << *f3 << std::endl;
-    prob = 0.0;
-    for (int i = 0; i < f3->size(); ++i) {
-        prob += (*f3)[i];
+        std::cout << *f << std::endl;
+        double prob = 0.0;
+        for (int i = 0; i < f->size(); ++i) { prob += (*f)[i]; }
+        std::cout << "P(True) = " << prob << std::endl;
     }
-    std::cout << "P(True) = " << prob << std::endl;
 
     return 0;
 }
