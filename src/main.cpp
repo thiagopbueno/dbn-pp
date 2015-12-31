@@ -19,6 +19,7 @@
 #include "variable.h"
 #include "io.h"
 #include "operations.h"
+#include "inference.h"
 
 #include <iostream>
 #include <vector>
@@ -26,25 +27,30 @@
 
 using namespace dbn;
 
+void print_factor(const Factor &f) {
+    std::cout << f << std::endl;
+    double prob = 0.0;
+    for (int i = 0; i < f.size(); ++i) { prob += f[i]; }
+    std::cout << "P(True) = " << prob << std::endl << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
     unsigned order;
     std::vector<std::unique_ptr<Variable> > variables;
-    std::vector<std::unique_ptr<Factor> > factors;
+    std::vector<std::shared_ptr<Factor> > factors;
 
     read_uai_model(order, variables, factors);
 
-    std::unique_ptr<Factor> f0(new Factor(1.0));
+    std::vector<const Variable* > ordering { (variables[1]).get(), (variables[2]).get(), (variables[0]).get() };
+    std::unique_ptr<Factor> elim = variable_elimination(ordering, factors);
+    print_factor(*elim);
 
-    std::unique_ptr<Factor> f = std::move(f0);
-    for (unsigned i = 0; i < order; ++i) {
-        f = product(*f, *(factors[i]));
-
-        std::cout << *f << std::endl;
-        double prob = 0.0;
-        for (int i = 0; i < f->size(); ++i) { prob += (*f)[i]; }
-        std::cout << "P(True) = " << prob << std::endl;
-    }
+    // for (auto const& pv : variables) {
+    //     ordering.insert(ordering.begin(), pv.get());
+    //     elim = variable_elimination(ordering, factors);
+    //     print_factor(*elim);
+    // }
 
     return 0;
 }

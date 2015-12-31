@@ -39,12 +39,15 @@ namespace dbn {
 
     std::ostream& operator<<(std::ostream &o, const Domain &d) {
         unsigned width = d.width();
-        o << "Domain{";
-        unsigned i;
-        for (i = 0; i < width-1; ++i) {
-            o << d[i]->id() << ", ";
+        if (width == 0) { o << "Domain{}"; }
+        else {
+            o << "Domain{";
+            unsigned i;
+            for (i = 0; i < width-1; ++i) {
+                o << d[i]->id() << ", ";
+            }
+            o << d[i]->id() << "}";
         }
-        o << d[i]->id() << "}";
         return o;
     }
 

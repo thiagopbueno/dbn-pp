@@ -23,14 +23,13 @@
 #include "domain.h"
 #include "factor.h"
 
-#include <memory>
-
 namespace dbn {
 
     Domain *union_of(const Domain& d1, const Domain& d2);
     Domain *union_of(const Domain& d1, const Domain& d2, const Variable *v);
 
-    std::unique_ptr<Factor> product(const Factor& f1, const Factor& f2);
+    Factor *product(const Factor& f1, const Factor& f2);
+    Factor *sum_product(const Factor& f1, const Factor& f2, const Variable *v);
 }
 
 #endif

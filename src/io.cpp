@@ -67,7 +67,7 @@ namespace dbn {
         }
     }
 
-    void read_factors(unsigned order, std::vector<std::unique_ptr<Variable> > &variables, std::vector<std::unique_ptr<Factor> > &factors) {
+    void read_factors(unsigned order, std::vector<std::unique_ptr<Variable> > &variables, std::vector<std::shared_ptr<Factor> > &factors) {
         unsigned width, id;
         for (unsigned i = 0; i < order; ++i) {
             read_next_integer(width);
@@ -78,8 +78,8 @@ namespace dbn {
                 scope.push_back(variables[id].get());
             }
 
-            std::unique_ptr<Factor> factor(new Factor(new Domain(scope, width)));
-            factors.push_back(std::move(factor));
+            std::shared_ptr<Factor> factor(new Factor(new Domain(scope, width)));
+            factors.push_back(factor);
         }
 
         unsigned factor_size;
@@ -94,7 +94,7 @@ namespace dbn {
         }
     }
 
-    int read_uai_model(unsigned &order, std::vector<std::unique_ptr<Variable> > &variables, std::vector<std::unique_ptr<Factor> > &factors) {
+    int read_uai_model(unsigned &order, std::vector<std::unique_ptr<Variable> > &variables, std::vector<std::shared_ptr<Factor> > &factors) {
         read_file_header();
         read_next_integer(order);
         read_variables(order, variables);

@@ -1,81 +1,111 @@
-// Copyright (c) 2014 Denis Maua
+// Copyright (c) 2015 Thiago Pereira Bueno
 // All Rights Reserved.
 //
-// This file is part of MSP library
+// This file is part of DBN library.
 //
-// MSP is free software: you can redistribute it and/or modify
+// DBN is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// MSP is distributed in the hope that it will be useful,
+// DBN is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with MSP.  If not, see <http://www.gnu.org/licenses/>.
-
-/** Implements direct inference algorithms */
-
-/* whether to use Pareto pruninig in set-valued variable elimination */
+// along with DBN.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <forward_list>
 #include <utility>
 #include <iostream>
 
-#include "constants.h"
 #include "inference.h"
 #include "operations.h"
 
-namespace msp {
+namespace dbn {
 
-  /** variable elimination algorithm.
-   *
-   * eliminates variables in the ordering given.
-   *
-   * @param variables a vector of variables
-   * @param factors a forward list (singly linked list) of factors
-   * @param verbosity an integer
-   * @return a factor 
-   */
-  Factor variable_elimination(const std::vector<Variable >& variables, std::vector<Factor >& factors, int verbosity)
-  {
+	std::unique_ptr<Factor> variable_elimination(std::vector<const Variable* > &variables, std::vector<std::shared_ptr<Factor> > &factors) {
 
-    std::forward_list<Factor > flist(factors.begin(),factors.end()); // pool of factors
-    std::forward_list<Factor > bucket;
-    for (auto var: variables)
-      {
-	if (verbosity) std::cout << "-" << var << std::endl;
-	// collect all factors with variable *v in their scope and remove them from factor list
-	bucket.clear();
-	unsigned b = 0; // bucket size
-	for (std::forward_list<Factor >::const_iterator pf=flist.before_begin(), f=flist.begin(); f != flist.end(); pf=f, f++)
-	  {
-	    if ( f->in_scope( var ) ) { 
-	      bucket.push_front( std::move( *f ) );
-	      b++; f = pf;
-	      flist.erase_after(pf);
-	    }
-	  }      
-	// multiply all factors in bucket and eliminate variable *v
-	if (b>0) {	    
-	    Factor p(1.0);
-	    std::forward_list<Factor >::const_iterator f = bucket.begin();
-	    while (b>1)
-	      {
-		p = product(p,*f);
-		f++; b--;
-	      }
-	    flist.push_front( sum_product(p,*f,var) );	    
-	    if (verbosity > 1) { f = flist.begin(); std::cout << "+" << *f << std::endl; }	    
-	  } 
-      }    
-    // generate result by multiplying all remaining factors in the pool
-    Factor p(1.0); // product-identity factor
-    for (std::forward_list<Factor >::const_iterator f = flist.begin(); f != flist.end(); f++)
-    	p = product(p,*f);
-    return p;
-  }
+	    std::forward_list<std::shared_ptr<Factor> > flist(factors.begin(), factors.end());
+	    std::forward_list<std::shared_ptr<Factor> > bucket;
+
+		for (auto var: variables) {
+
+			// std::cout << "Eliminating variable: " << *var << std::endl;
+
+			// std::cout << "All factors:" << std::endl;
+			// for (auto f : flist) {
+			// 	std::cout << *f << std::endl;
+			// }
+
+			// select all factors with var in its scope
+			bucket.clear();
+			unsigned b = 0; // bucket size
+
+			std::forward_list<std::shared_ptr<Factor> >::const_iterator pf;
+
+			std::forward_list<std::shared_ptr<Factor> > new_flist;
+			for (pf = flist.begin(); pf != flist.end(); ++pf) {
+
+				if ((*pf)->domain().in_scope(var)) {
+					bucket.push_front(*pf);
+					b++;
+				}
+				else {
+					new_flist.push_front(*pf);
+				}
+			}
+
+			// std::cout << "Bucket:" << std::endl;
+			// for (auto f : bucket) {
+			// 	std::cout << *f << std::endl;
+			// }
+
+			// std::cout << "Other factors:" << std::endl;
+			// for (auto f : new_flist) {
+			// 	std::cout << *f << std::endl;
+			// }
+
+			flist = new_flist;
+
+			// multiply all factors in bucket and eliminate variable
+			if (b > 0) {
+				std::unique_ptr<Factor> prod(new Factor(1.0));
+				std::forward_list<std::shared_ptr<Factor> >::const_iterator pf = bucket.begin();
+				while (b > 1) {
+					std::unique_ptr<Factor> p(product(*prod, **pf));
+					prod = std::move(p);
+					pf++;
+					b--;
+				}
+
+				std::unique_ptr<Factor> p(sum_product(*prod, **pf, var));
+				prod = std::move(p);
+				// std::cout << "prod" << std::endl;
+				// std::cout << *f << std::endl;
+
+				new_flist.push_front(std::move(prod));
+	  		}
+
+	  		// std::cout << "New list:" << std::endl;
+			// for (auto f : new_flist) {
+			// 	std::cout << *f << std::endl;
+			// }
+			// std::cout << std::endl;
+
+	  		// std::forward_list<std::shared_ptr<Factor> > flist(new_flist.begin(), new_flist.end());
+	  		flist = new_flist;
+		}
+
+		// generate result by multiplying all remaining factors in the pool
+		std::unique_ptr<Factor> prod(new Factor(1.0));
+		std::forward_list<std::shared_ptr<Factor> >::const_iterator pf;
+		for (pf = flist.begin(); pf != flist.end(); ++pf) {
+			prod = std::unique_ptr<Factor>(product(*prod, **pf));
+		}
+
+		return prod;
+	}
 
 }

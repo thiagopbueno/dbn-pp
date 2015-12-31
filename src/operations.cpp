@@ -55,7 +55,7 @@ namespace dbn {
 
         for (unsigned i = 0; i < width1; ++i) {
             const Variable *v = d1[i];
-            if (!d1.in_scope(v)) {
+            if (v->id() != var->id()) {
                 scope.push_back(v);
                 total_width++;
             }
@@ -74,6 +74,7 @@ namespace dbn {
     }
 
     std::vector<unsigned> consistent_instantiation(std::vector<unsigned> inst1, const Domain& d1, const Domain& d2) {
+        if (d2.width() == 0) { return std::vector<unsigned>(1, 0); }
         std::vector<unsigned> inst2(d2.width());
         for (unsigned i = 0; i < inst1.size(); ++i) {
             const Variable *v1 = d1[i];
@@ -84,17 +85,17 @@ namespace dbn {
         return inst2;
     }
 
-	std::unique_ptr<Factor> product(const Factor& f1, const Factor& f2) {
+	Factor *product(const Factor& f1, const Factor& f2) {
 
         const Domain &d1 = f1.domain();
         const Domain &d2 = f2.domain();
         Domain *d = union_of(d1, d2);
-		std::unique_ptr<Factor> new_factor(new Factor(d, 0.0));
+		Factor *new_factor = new Factor(d, 0.0);
 
         std::vector<unsigned> counter(new_factor->width(), 0);
         for (unsigned i = 0; i < new_factor->size(); ++i) {
 
-            // consistent instantiation for both factors
+            // find consistent instantiation for both factors
             std::vector<unsigned> inst1 = consistent_instantiation(counter, *d, d1);
             std::vector<unsigned> inst2 = consistent_instantiation(counter, *d, d2);
 
@@ -104,6 +105,47 @@ namespace dbn {
 
             // set product factor value
             (*new_factor)[i] = f1[pos1] * f2[pos2];
+
+            // update counter
+            unsigned j;
+            for (j = 0; j < counter.size() && counter[j] == 1; ++j) {
+                counter[j] = 0;
+            }
+            if (j < counter.size()) {
+                counter[j] = 1;
+            }
+        }
+
+        return new_factor;
+    }
+
+    Factor *sum_product(const Factor& f1, const Factor& f2, const Variable *v) {
+
+        const Domain &d1 = f1.domain();
+        const Domain &d2 = f2.domain();
+        Domain *d = union_of(d1, d2, v);
+        Factor *new_factor = new Factor(d, 0.0);
+
+        std::vector<unsigned> counter(new_factor->width(), 0);
+        for (unsigned i = 0; i < new_factor->size(); ++i) {
+
+            // find consistent instantiation for both factors
+            std::vector<unsigned> inst1 = consistent_instantiation(counter, *d, d1);
+            std::vector<unsigned> inst2 = consistent_instantiation(counter, *d, d2);
+
+            for (unsigned val = 0; val < v->size(); ++val) {
+
+                // update instantiation with variable value
+                if (d1.in_scope(v)) { inst1[d1[v]] = val; }
+                if (d2.in_scope(v)) { inst2[d2[v]] = val; }
+
+                // find position in linearization
+                unsigned pos1 = d1.position(inst1);
+                unsigned pos2 = d2.position(inst2);
+
+                // update product factor value
+                (*new_factor)[i] += f1[pos1] * f2[pos2];
+            }
 
             // update counter
             unsigned j;
