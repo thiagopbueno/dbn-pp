@@ -85,6 +85,12 @@ namespace dbn {
         return inst2;
     }
 
+    // void print_inst(std::vector<unsigned> inst) {
+    //     for (auto d : inst) {
+    //         std::cout << d << " ";
+    //     }
+    // }
+
 	Factor *product(const Factor& f1, const Factor& f2) {
 
         const Domain &d1 = f1.domain();
@@ -99,19 +105,28 @@ namespace dbn {
             std::vector<unsigned> inst1 = consistent_instantiation(counter, *d, d1);
             std::vector<unsigned> inst2 = consistent_instantiation(counter, *d, d2);
 
+            // std::cout << ">>instantiation: ";
+            // print_inst(counter);
+            // std::cout << ": ";
+            // print_inst(inst1);
+            // std::cout << ": ";
+            // print_inst(inst2);
+
             // find position in linearization
             unsigned pos1 = d1.position(inst1);
             unsigned pos2 = d2.position(inst2);
+
+            // std::cout << ">> position: " << pos1 << ", " << pos2 << std::endl;
 
             // set product factor value
             (*new_factor)[i] = f1[pos1] * f2[pos2];
 
             // update counter
-            unsigned j;
-            for (j = 0; j < counter.size() && counter[j] == 1; ++j) {
+            int j;
+            for (j = counter.size()-1; j >= 0 && counter[j] == 1; --j) {
                 counter[j] = 0;
             }
-            if (j < counter.size()) {
+            if (j >= 0) {
                 counter[j] = 1;
             }
         }
@@ -148,11 +163,11 @@ namespace dbn {
             }
 
             // update counter
-            unsigned j;
-            for (j = 0; j < counter.size() && counter[j] == 1; ++j) {
+            int j;
+            for (j = counter.size()-1; j >= 0 && counter[j] == 1; --j) {
                 counter[j] = 0;
             }
-            if (j < counter.size()) {
+            if (j >= 0) {
                 counter[j] = 1;
             }
         }

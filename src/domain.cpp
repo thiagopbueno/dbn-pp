@@ -21,9 +21,10 @@
 namespace dbn {
 
     Domain::Domain(std::vector<const Variable* > scope, unsigned width) : _scope(scope), _width(width) {
+        _offset.reserve(width);
         _size = 1;
-        for (unsigned i = 0; i < _width; ++i) {
-            _offset.push_back(_size);
+        for (int i = _width-1; i >= 0; --i) {
+            _offset[i] = _size;
             _size *= _scope[i]->size();
             _var_to_index[_scope[i]->id()] = i;
         }
@@ -31,8 +32,8 @@ namespace dbn {
 
     unsigned Domain::position(std::vector<unsigned> instantiation) const {
         unsigned pos = 0;
-        for (unsigned i = 0; i < _width; ++i) {
-            pos += instantiation[i] * _offset[_width - i - 1];
+        for (int i = _width-1; i >= 0; --i) {
+            pos += instantiation[i] * _offset[i];
         }
         return pos;
     }
