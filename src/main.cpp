@@ -27,11 +27,19 @@
 
 using namespace dbn;
 
+void print_elimination_ordering(std::vector<const Variable* > ordering) {
+    std::cout << "Elimination ordering: { ";
+    for (auto pv : ordering) {
+        std::cout << pv->id() << " ";
+    }
+    std::cout << "}" << std::endl;
+}
+
 void print_factor(const Factor &f) {
     std::cout << f << std::endl;
     double prob = 0.0;
     for (int i = 0; i < f.size(); ++i) { prob += f[i]; }
-    std::cout << "P(True) = " << prob << std::endl << std::endl;
+    std::cout << "Total Probability = " << prob << std::endl << std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -42,15 +50,19 @@ int main(int argc, char *argv[])
 
     read_uai_model(order, variables, factors);
 
-    std::vector<const Variable* > ordering { (variables[1]).get(), (variables[2]).get(), (variables[0]).get() };
-    std::unique_ptr<Factor> elim = variable_elimination(ordering, factors);
-    print_factor(*elim);
+    std::vector<const Variable* > ordering {};
+    std::unique_ptr<Factor> factor;
 
-    // for (auto const& pv : variables) {
-    //     ordering.insert(ordering.begin(), pv.get());
-    //     elim = variable_elimination(ordering, factors);
-    //     print_factor(*elim);
-    // }
+    factor = variable_elimination(ordering, factors);
+    print_elimination_ordering(ordering);
+    print_factor(*factor);
+
+    for (auto const& pv : variables) {
+        ordering.push_back(pv.get());
+        factor = variable_elimination(ordering, factors);
+        print_elimination_ordering(ordering);
+        print_factor(*factor);
+    }
 
     return 0;
 }
