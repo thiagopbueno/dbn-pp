@@ -62,8 +62,7 @@ namespace dbn {
         unsigned sz;
         for (unsigned id = 0; id < order; ++id) {
             read_next_integer(sz);
-            std::unique_ptr<Variable> v(new Variable(id, sz));
-            variables.push_back(std::move(v));
+            variables.emplace_back(new Variable(id, sz));
         }
     }
 
@@ -78,8 +77,7 @@ namespace dbn {
                 scope.push_back(variables[id].get());
             }
 
-            std::shared_ptr<Factor> factor(new Factor(new Domain(scope, width)));
-            factors.push_back(factor);
+            factors.emplace_back(new Factor(new Domain(scope, width)));
         }
 
         unsigned factor_size;
