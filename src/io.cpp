@@ -22,43 +22,46 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <memory>
+
+using namespace std;
 
 namespace dbn {
 
-    bool read_next_token(std::string &token) {
-        while (std::cin) {
-            std::cin >> token;
+    bool read_next_token(string &token) {
+        while (cin) {
+            cin >> token;
             if (token[0] != '#') return true;
-            std::getline(std::cin, token);  // ignore rest of line
+            getline(cin, token);  // ignore rest of line
         }
         return false;
     }
 
     bool read_next_integer(unsigned &i) {
-        std::string token;
+        string token;
         if (!read_next_token(token)) return false;
-        i = std::stoi(token);
+        i = stoi(token);
         return true;
     }
 
     bool read_next_double(double &d) {
-        std::string token;
+        string token;
         if (!read_next_token(token)) return false;
-        d = std::stod(token);
+        d = stod(token);
         return true;
     }
 
-    std::string read_file_header() {
-        std::string token;
+    string read_file_header() {
+        string token;
         read_next_token(token);
-        if (token.compare("BAYES") != 0)  {
-            std::cerr << "ERROR! Expected 'BAYES' file header, found: " << token << std::endl;
+        if (token.compare("DBAYES") != 0)  {
+            cerr << "ERROR! Expected 'DBAYES' file header, found: " << token << endl;
         }
         return token;
     }
 
-    void read_variables(unsigned &order, std::vector<std::unique_ptr<Variable>> &variables) {
+    void read_variables(unsigned &order, vector<unique_ptr<Variable>> &variables) {
         read_next_integer(order);
 
         unsigned sz;
@@ -68,12 +71,31 @@ namespace dbn {
         }
     }
 
-    void read_factors(unsigned order, std::vector<std::unique_ptr<Variable>> &variables, std::vector<std::shared_ptr<Factor>> &factors) {
+    void read_transition_model(unsigned &transition_order, unordered_map<unsigned, unsigned> &transition) {
+        read_next_integer(transition_order);
+        for (unsigned i = 0; i < transition_order/2; ++i) {
+            unsigned curr, next;
+            read_next_integer(curr);
+            read_next_integer(next);
+            transition[next] = curr;
+        }
+    }
+
+    void read_sensor_model(unsigned &sensor_order, vector<unsigned> &sensor) {
+        read_next_integer(sensor_order);
+        for (unsigned i = 0; i < sensor_order; ++i) {
+            unsigned v;
+            read_next_integer(v);
+            sensor.push_back(v);
+        }
+    }
+
+    void read_factors(unsigned order, vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors) {
         unsigned width, id;
         for (unsigned i = 0; i < order; ++i) {
             read_next_integer(width);
 
-            std::vector<const Variable*> scope;
+            vector<const Variable*> scope;
             for (unsigned j = 0; j < width; ++j) {
                 read_next_integer(id);
                 scope.push_back(variables[id].get());
@@ -94,9 +116,12 @@ namespace dbn {
         }
     }
 
-    int read_uai_model(unsigned &order, std::vector<std::unique_ptr<Variable>> &variables, std::vector<std::shared_ptr<Factor>> &factors) {
+    int read_uai_model(unsigned &order, vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors, unordered_map<unsigned, unsigned> &transition, vector<unsigned> &sensor) {
         read_file_header();
         read_variables(order, variables);
+        unsigned transition_order, sensor_order;
+        read_transition_model(transition_order, transition);
+        read_sensor_model(sensor_order, sensor);
         read_factors(order, variables, factors);
         return 0;
     }

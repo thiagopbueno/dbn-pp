@@ -48,7 +48,10 @@ int main(int argc, char *argv[])
     std::vector<std::unique_ptr<Variable>> variables;
     std::vector<std::shared_ptr<Factor>> factors;
 
-    read_uai_model(order, variables, factors);
+    std::unordered_map<unsigned, unsigned> transition;
+    std::vector<unsigned> sensor;
+
+    read_uai_model(order, variables, factors, transition, sensor);
 
     std::vector<const Variable*> ordering {};
     std::unique_ptr<Factor> factor;
