@@ -57,22 +57,23 @@ int main(int argc, char *argv[])
     std::vector<const Variable*> ordering {};
     std::unique_ptr<Factor> factor;
 
-    // factor = variable_elimination(ordering, factors);
-    // print_elimination_ordering(ordering);
-    // print_factor(*factor);
+    cout << ">> VARIABLE ELIMINATION" << endl;
+    factor = variable_elimination(ordering, factors);
+    print_elimination_ordering(ordering);
+    print_factor(*factor);
 
-    // for (auto const& pv : variables) {
-    //     ordering.push_back(pv.get());
-    //     factor = variable_elimination(ordering, factors);
-    //     print_elimination_ordering(ordering);
-    //     print_factor(*factor);
-    // }
+    for (auto const& pv : variables) {
+        ordering.push_back(pv.get());
+        factor = variable_elimination(ordering, factors);
+        print_elimination_ordering(ordering);
+        print_factor(*factor);
+    }
 
+    cout << ">> CONDITIONING" << endl;
     std::unordered_map<unsigned,unsigned> evidence;
     evidence[0] = 1;
 
     for (auto const& pf : factors) {
-        print_factor(*pf);
         factor = unique_ptr<Factor>(conditioning(*pf, evidence));
         print_factor(*factor);
     }

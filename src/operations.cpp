@@ -19,7 +19,6 @@
 #include "operations.h"
 
 #include <vector>
-#include <iostream>
 
 using namespace std;
 
@@ -85,27 +84,15 @@ namespace dbn {
         vector<unsigned> instantiation(new_factor->width(), 0);
         for (unsigned i = 0; i < new_factor->size(); ++i) {
 
-            // find consistent instantiation for both factors
-            vector<unsigned> inst1;
-            d->consistent_instantiation(instantiation, d1, inst1);
-            vector<unsigned> inst2;
-            d->consistent_instantiation(instantiation, d2, inst2);
-
-            // find position in linearization
-            unsigned pos1 = d1.position(inst1);
-            unsigned pos2 = d2.position(inst2);
+            // find position in linearization of consistent instantiation
+            unsigned pos1 = d1.position_consistent_instantiation(instantiation, *d);
+            unsigned pos2 = d2.position_consistent_instantiation(instantiation, *d);
 
             // set product factor value
             (*new_factor)[i] = f1[pos1] * f2[pos2];
 
             // find next instantiation
-            int j;
-            for (j = instantiation.size()-1; j >= 0 && instantiation[j] == 1; --j) {
-                instantiation[j] = 0;
-            }
-            if (j >= 0) {
-                instantiation[j] = 1;
-            }
+            d->next_instantiation(instantiation);
         }
 
         return new_factor;
@@ -122,61 +109,42 @@ namespace dbn {
         for (unsigned i = 0; i < new_factor->size(); ++i) {
 
             // find consistent instantiation for both factors
-            vector<unsigned> inst1;
-            d->consistent_instantiation(instantiation, d1, inst1);
-            vector<unsigned> inst2;
-            d->consistent_instantiation(instantiation, d2, inst2);
+            // vector<unsigned> inst1 = d->consistent_instantiation(instantiation, d1);
+            // vector<unsigned> inst2 = d->consistent_instantiation(instantiation, d2);
 
             for (unsigned val = 0; val < v->size(); ++val) {
 
                 // find next instantiation with variable value
-                if (d1.in_scope(v)) { inst1[d1[v]] = val; }
-                if (d2.in_scope(v)) { inst2[d2[v]] = val; }
+                // if (d1.in_scope(v)) { inst1[d1[v]] = val; }
+                // if (d2.in_scope(v)) { inst2[d2[v]] = val; }
 
                 // find position in linearization
-                unsigned pos1 = d1.position(inst1);
-                unsigned pos2 = d2.position(inst2);
+                unsigned pos1 = d1.position_consistent_instantiation(instantiation, *d, v, val);
+                unsigned pos2 = d2.position_consistent_instantiation(instantiation, *d, v, val);
 
                 // update product factor value
                 (*new_factor)[i] += f1[pos1] * f2[pos2];
             }
 
             // find next instantiation
-            int j;
-            for (j = instantiation.size()-1; j >= 0 && instantiation[j] == 1; --j) {
-                instantiation[j] = 0;
-            }
-            if (j >= 0) {
-                instantiation[j] = 1;
-            }
+            d->next_instantiation(instantiation);
         }
 
         return new_factor;
     }
 
     Factor *conditioning(const Factor &f, const unordered_map<unsigned,unsigned> &evidence) {
-
-        vector<const Variable*> scope;
-        unsigned width = 0;
-        for (auto variable : f.domain()) {
-            if (!evidence.count(variable->id())) {
-                scope.push_back(variable);
-                ++width;
-            }
-        }
-
-        Factor *new_factor = new Factor(new Domain(scope, width));
+        Factor *new_factor = new Factor(new Domain(f.domain(), evidence));
 
         const Domain &d = f.domain();
-        vector<unsigned> instantiation(f.width(), 0);
 
         // incorporate evidence in instantiation
+        vector<unsigned> instantiation(f.width(), 0);
         d.update_instantiation_with_evidence(instantiation, evidence);
 
         for (unsigned i = 0; i < new_factor->size(); ++i) {
-
             // update new factor
-            unsigned pos = d.position(instantiation);
+            unsigned pos = d.position_instantiation(instantiation);
             (*new_factor)[i] = f[pos];
 
             // find next instantiation

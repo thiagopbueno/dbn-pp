@@ -18,11 +18,13 @@
 
 #include "domain.h"
 
+#include <iostream>
+
 using namespace std;
 
 namespace dbn {
 
-    // Domain::Domain() : _width(0), _size(1) { }
+    Domain::Domain() : _width(0), _size(1) {}
 
     Domain::Domain(vector<const Variable*> scope, unsigned width) : _scope(scope), _width(width) {
         _size = 1;
@@ -36,7 +38,45 @@ namespace dbn {
         }
     }
 
-    unsigned Domain::position(vector<unsigned> instantiation) const {
+    Domain::Domain(const Domain &domain, const unordered_map<unsigned,unsigned> &evidence) {
+        for (auto it_scope : domain._scope) {
+            const Variable *variable = it_scope;
+            if (!evidence.count(variable->id())) {
+                _scope.push_back(variable);
+            }
+        }
+        _width = _scope.size();
+        _size = 1;
+        _offset.reserve(_width);
+        for (int i = _width-1; i >= 0; --i) {
+            _offset[i] = _size;
+            _size *= _scope[i]->size();
+            _var_to_index[_scope[i]->id()] = i;
+        }
+    }
+
+    const Variable *Domain::operator[](unsigned i) const {
+        if (i < _width) return _scope[i];
+        else throw "Domain::operator[unsigned i]: Index out of range!";
+    }
+
+    unsigned Domain::operator[](const Variable* v) const {
+        unordered_map<unsigned,unsigned>::const_iterator it_index = _var_to_index.find(v->id());
+        if (it_index != _var_to_index.end()) return it_index->second;
+        else throw "Domain::operator[const Variable*]: Invalid argument!";
+    }
+
+    bool Domain::in_scope(const Variable* v) const {
+        unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find(v->id());
+        return (it != _var_to_index.end());
+    }
+
+    bool Domain::in_scope(unsigned id) const {
+        unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find(id);
+        return (it != _var_to_index.end());
+    }
+
+    unsigned Domain::position_instantiation(vector<unsigned> instantiation) const {
         unsigned pos = 0;
         for (int i = _width-1; i >= 0; --i) {
             pos += instantiation[i] * _offset[i];
@@ -44,20 +84,30 @@ namespace dbn {
         return pos;
     }
 
-    void Domain::consistent_instantiation(const vector<unsigned> &instantiation, const Domain& domain, vector<unsigned> &new_instantiation) const {
-        if (domain.width() == 0) {
-            new_instantiation.reserve(1);
-            new_instantiation[0] = 0;
-        }
+    unsigned Domain::position_consistent_instantiation(vector<unsigned> instantiation, const Domain &domain) const {
+        if (_width == 0) { return 0; }
         else {
-            new_instantiation.reserve(domain.width());
-            for (unsigned i = 0; i < instantiation.size(); ++i) {
-                const Variable *v = domain[i];
-                if (domain.in_scope(v)) {
-                    new_instantiation[domain[v]] = instantiation[i];
+            unsigned pos = 0;
+            unsigned index = 0;
+            for (auto v : _scope) {
+                unordered_map<unsigned,unsigned>::const_iterator it_index = _var_to_index.find(v->id());
+                unordered_map<unsigned,unsigned>::const_iterator it_index2 = domain._var_to_index.find(v->id());
+                if (it_index != _var_to_index.end() && it_index2 != _var_to_index.end()) {
+                    pos +=  _offset[it_index->second] * instantiation[it_index2->second];
                 }
+                index++;
             }
+            return pos;
         }
+    }
+
+    unsigned Domain::position_consistent_instantiation(vector<unsigned> instantiation, const Domain &domain, const Variable *v, unsigned value) const {
+        unsigned pos = position_consistent_instantiation(instantiation, domain);
+        unordered_map<unsigned,unsigned>::const_iterator it_index = _var_to_index.find(v->id());
+        if (it_index != _var_to_index.end()) {
+            pos += _offset[it_index->second] * value;
+        }
+        return pos;
     }
 
     void Domain::update_instantiation_with_evidence(vector<unsigned> &instantiation, const unordered_map<unsigned,unsigned> &evidence) const {
@@ -70,6 +120,16 @@ namespace dbn {
             if (it_index != _var_to_index.end()) {
                 instantiation[it_index->second] = value;
             }
+        }
+    }
+
+    void Domain::next_instantiation(vector<unsigned> &instantiation) const {
+        int j;
+        for (j = instantiation.size()-1; j >= 0 && instantiation[j] == 1; --j) {
+            instantiation[j] = 0;
+        }
+        if (j >= 0) {
+            instantiation[j] = 1;
         }
     }
 
