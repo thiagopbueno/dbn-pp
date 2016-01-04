@@ -25,9 +25,6 @@
 
 namespace dbn {
 
-    Domain *union_of(const Domain& d1, const Domain& d2);
-    Domain *union_of(const Domain& d1, const Domain& d2, const Variable *v);
-
     Factor *product(const Factor& f1, const Factor& f2);
     Factor *sum_product(const Factor& f1, const Factor& f2, const Variable *v);
 }
