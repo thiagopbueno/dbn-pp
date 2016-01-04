@@ -23,10 +23,13 @@
 #include "domain.h"
 #include "factor.h"
 
+#include <unordered_map>
+
 namespace dbn {
 
-    Factor *product(const Factor& f1, const Factor& f2);
-    Factor *sum_product(const Factor& f1, const Factor& f2, const Variable *v);
+    Factor *product(const Factor &f1, const Factor &f2);
+    Factor *sum_product(const Factor &f1, const Factor &f2, const Variable *v);
+    Factor *conditioning(const Factor &f, const std::unordered_map<unsigned,unsigned> &evidence);
 }
 
 #endif

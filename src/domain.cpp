@@ -18,19 +18,25 @@
 
 #include "domain.h"
 
+using namespace std;
+
 namespace dbn {
 
-    Domain::Domain(std::vector<const Variable*> scope, unsigned width) : _scope(scope), _width(width) {
-        _offset.reserve(width);
+    // Domain::Domain() : _width(0), _size(1) { }
+
+    Domain::Domain(vector<const Variable*> scope, unsigned width) : _scope(scope), _width(width) {
         _size = 1;
-        for (int i = _width-1; i >= 0; --i) {
-            _offset[i] = _size;
-            _size *= _scope[i]->size();
-            _var_to_index[_scope[i]->id()] = i;
+        if (_width > 0) {
+            _offset.reserve(_width);
+            for (int i = _width-1; i >= 0; --i) {
+                _offset[i] = _size;
+                _size *= _scope[i]->size();
+                _var_to_index[_scope[i]->id()] = i;
+            }
         }
     }
 
-    unsigned Domain::position(std::vector<unsigned> instantiation) const {
+    unsigned Domain::position(vector<unsigned> instantiation) const {
         unsigned pos = 0;
         for (int i = _width-1; i >= 0; --i) {
             pos += instantiation[i] * _offset[i];
@@ -38,7 +44,47 @@ namespace dbn {
         return pos;
     }
 
-    std::ostream& operator<<(std::ostream &o, const Domain &d) {
+    void Domain::consistent_instantiation(const vector<unsigned> &instantiation, const Domain& domain, vector<unsigned> &new_instantiation) const {
+        if (domain.width() == 0) {
+            new_instantiation.reserve(1);
+            new_instantiation[0] = 0;
+        }
+        else {
+            new_instantiation.reserve(domain.width());
+            for (unsigned i = 0; i < instantiation.size(); ++i) {
+                const Variable *v = domain[i];
+                if (domain.in_scope(v)) {
+                    new_instantiation[domain[v]] = instantiation[i];
+                }
+            }
+        }
+    }
+
+    void Domain::update_instantiation_with_evidence(vector<unsigned> &instantiation, const unordered_map<unsigned,unsigned> &evidence) const {
+        if (_width == 0) return;
+        for (auto it_evidence : evidence) {
+            unsigned id = it_evidence.first;
+            unsigned value = it_evidence.second;
+
+            unordered_map<unsigned,unsigned>::const_iterator it_index = _var_to_index.find(id);
+            if (it_index != _var_to_index.end()) {
+                instantiation[it_index->second] = value;
+            }
+        }
+    }
+
+    void Domain::next_instantiation(vector<unsigned> &instantiation, const unordered_map<unsigned,unsigned> &evidence) const {
+        int j;
+        for (j = instantiation.size()-1; j >= 0 && (evidence.count(_scope[j]->id()) || instantiation[j] == 1); --j) {
+            if (evidence.count(_scope[j]->id())) continue;
+            instantiation[j] = 0;
+        }
+        if (j >= 0) {
+            instantiation[j] = 1;
+        }
+    }
+
+    ostream& operator<<(ostream &o, const Domain &d) {
         unsigned width = d.width();
         if (width == 0) { o << "Domain{}"; }
         else {

@@ -42,25 +42,40 @@ namespace dbn {
 
         unsigned operator[](const Variable* v) const {
             if (in_scope(v)) {
-                std::unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find (v->id());
+                std::unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find(v->id());
                 return it->second;
             }
             else throw "Domain::operator[const Variable*]: Invalid argument!";
         }
 
+        std::vector<const Variable*>::iterator begin() { return _scope.begin(); };
+        std::vector<const Variable*>::iterator end() { return _scope.end(); };
+        std::vector<const Variable*>::const_iterator begin() const { return _scope.begin(); };
+        std::vector<const Variable*>::const_iterator end() const { return _scope.end(); };
+
         bool in_scope(const Variable* v) const {
-            std::unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find (v->id());
+            std::unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find(v->id());
             return (it != _var_to_index.end());
-        }
+        };
+
+        bool in_scope(unsigned id) const {
+            std::unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find(id);
+            return (it != _var_to_index.end());
+        };
 
         unsigned offset(const Variable *v) const {
             if (in_scope(v)) {
-                std::unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find (v->id());
+                std::unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find(v->id());
                 unsigned i = it->second;
                 return _offset[i];
             }
             else throw "Domain::offset: Invalid argument!";
-        }
+        };
+
+        void consistent_instantiation(const std::vector<unsigned> &instantiation, const Domain& domain, std::vector<unsigned> &new_instantiation) const;
+        void update_instantiation_with_evidence(std::vector<unsigned> &instantiation, const std::unordered_map<unsigned,unsigned> &evidence) const;
+
+        void next_instantiation(std::vector<unsigned> &instantiation, const std::unordered_map<unsigned,unsigned> &evidence) const;
 
 
         unsigned position(std::vector<unsigned> instantiation) const;

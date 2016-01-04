@@ -16,15 +16,16 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DBN.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "variable.h"
 #include "io.h"
 #include "operations.h"
 #include "inference.h"
 
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 #include <memory>
 
+using namespace std;
 using namespace dbn;
 
 void print_elimination_ordering(std::vector<const Variable*> ordering) {
@@ -56,14 +57,23 @@ int main(int argc, char *argv[])
     std::vector<const Variable*> ordering {};
     std::unique_ptr<Factor> factor;
 
-    factor = variable_elimination(ordering, factors);
-    print_elimination_ordering(ordering);
-    print_factor(*factor);
+    // factor = variable_elimination(ordering, factors);
+    // print_elimination_ordering(ordering);
+    // print_factor(*factor);
 
-    for (auto const& pv : variables) {
-        ordering.push_back(pv.get());
-        factor = variable_elimination(ordering, factors);
-        print_elimination_ordering(ordering);
+    // for (auto const& pv : variables) {
+    //     ordering.push_back(pv.get());
+    //     factor = variable_elimination(ordering, factors);
+    //     print_elimination_ordering(ordering);
+    //     print_factor(*factor);
+    // }
+
+    std::unordered_map<unsigned,unsigned> evidence;
+    evidence[0] = 1;
+
+    for (auto const& pf : factors) {
+        print_factor(*pf);
+        factor = unique_ptr<Factor>(conditioning(*pf, evidence));
         print_factor(*factor);
     }
 

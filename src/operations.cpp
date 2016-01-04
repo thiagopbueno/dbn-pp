@@ -21,10 +21,12 @@
 #include <vector>
 #include <iostream>
 
+using namespace std;
+
 namespace dbn {
 
 	Domain *union_of(const Domain& d1, const Domain& d2) {
-        std::vector<const Variable*> scope;
+        vector<const Variable*> scope;
         unsigned total_width;
 
         unsigned width1 = d1.width();
@@ -48,7 +50,7 @@ namespace dbn {
     }
 
     Domain *union_of(const Domain& d1, const Domain& d2, const Variable* var) {
-        std::vector<const Variable*> scope;
+        vector<const Variable*> scope;
         unsigned total_width = 0;
 
         unsigned width1 = d1.width();
@@ -73,24 +75,6 @@ namespace dbn {
         return new Domain(scope, total_width);
     }
 
-    std::vector<unsigned> consistent_instantiation(std::vector<unsigned> inst1, const Domain& d1, const Domain& d2) {
-        if (d2.width() == 0) { return std::vector<unsigned>(1, 0); }
-        std::vector<unsigned> inst2(d2.width());
-        for (unsigned i = 0; i < inst1.size(); ++i) {
-            const Variable *v1 = d1[i];
-            if (d2.in_scope(v1)) {
-                inst2[d2[v1]] = inst1[i];
-            }
-        }
-        return inst2;
-    }
-
-    // void print_inst(std::vector<unsigned> inst) {
-    //     for (auto d : inst) {
-    //         std::cout << d << " ";
-    //     }
-    // }
-
 	Factor *product(const Factor& f1, const Factor& f2) {
 
         const Domain &d1 = f1.domain();
@@ -98,36 +82,29 @@ namespace dbn {
         Domain *d = union_of(d1, d2);
 		Factor *new_factor = new Factor(d, 0.0);
 
-        std::vector<unsigned> counter(new_factor->width(), 0);
+        vector<unsigned> instantiation(new_factor->width(), 0);
         for (unsigned i = 0; i < new_factor->size(); ++i) {
 
             // find consistent instantiation for both factors
-            std::vector<unsigned> inst1 = consistent_instantiation(counter, *d, d1);
-            std::vector<unsigned> inst2 = consistent_instantiation(counter, *d, d2);
-
-            // std::cout << ">>instantiation: ";
-            // print_inst(counter);
-            // std::cout << ": ";
-            // print_inst(inst1);
-            // std::cout << ": ";
-            // print_inst(inst2);
+            vector<unsigned> inst1;
+            d->consistent_instantiation(instantiation, d1, inst1);
+            vector<unsigned> inst2;
+            d->consistent_instantiation(instantiation, d2, inst2);
 
             // find position in linearization
             unsigned pos1 = d1.position(inst1);
             unsigned pos2 = d2.position(inst2);
 
-            // std::cout << ">> position: " << pos1 << ", " << pos2 << std::endl;
-
             // set product factor value
             (*new_factor)[i] = f1[pos1] * f2[pos2];
 
-            // update counter
+            // find next instantiation
             int j;
-            for (j = counter.size()-1; j >= 0 && counter[j] == 1; --j) {
-                counter[j] = 0;
+            for (j = instantiation.size()-1; j >= 0 && instantiation[j] == 1; --j) {
+                instantiation[j] = 0;
             }
             if (j >= 0) {
-                counter[j] = 1;
+                instantiation[j] = 1;
             }
         }
 
@@ -141,16 +118,18 @@ namespace dbn {
         Domain *d = union_of(d1, d2, v);
         Factor *new_factor = new Factor(d, 0.0);
 
-        std::vector<unsigned> counter(new_factor->width(), 0);
+        vector<unsigned> instantiation(new_factor->width(), 0);
         for (unsigned i = 0; i < new_factor->size(); ++i) {
 
             // find consistent instantiation for both factors
-            std::vector<unsigned> inst1 = consistent_instantiation(counter, *d, d1);
-            std::vector<unsigned> inst2 = consistent_instantiation(counter, *d, d2);
+            vector<unsigned> inst1;
+            d->consistent_instantiation(instantiation, d1, inst1);
+            vector<unsigned> inst2;
+            d->consistent_instantiation(instantiation, d2, inst2);
 
             for (unsigned val = 0; val < v->size(); ++val) {
 
-                // update instantiation with variable value
+                // find next instantiation with variable value
                 if (d1.in_scope(v)) { inst1[d1[v]] = val; }
                 if (d2.in_scope(v)) { inst2[d2[v]] = val; }
 
@@ -162,14 +141,46 @@ namespace dbn {
                 (*new_factor)[i] += f1[pos1] * f2[pos2];
             }
 
-            // update counter
+            // find next instantiation
             int j;
-            for (j = counter.size()-1; j >= 0 && counter[j] == 1; --j) {
-                counter[j] = 0;
+            for (j = instantiation.size()-1; j >= 0 && instantiation[j] == 1; --j) {
+                instantiation[j] = 0;
             }
             if (j >= 0) {
-                counter[j] = 1;
+                instantiation[j] = 1;
             }
+        }
+
+        return new_factor;
+    }
+
+    Factor *conditioning(const Factor &f, const unordered_map<unsigned,unsigned> &evidence) {
+
+        vector<const Variable*> scope;
+        unsigned width = 0;
+        for (auto variable : f.domain()) {
+            if (!evidence.count(variable->id())) {
+                scope.push_back(variable);
+                ++width;
+            }
+        }
+
+        Factor *new_factor = new Factor(new Domain(scope, width));
+
+        const Domain &d = f.domain();
+        vector<unsigned> instantiation(f.width(), 0);
+
+        // incorporate evidence in instantiation
+        d.update_instantiation_with_evidence(instantiation, evidence);
+
+        for (unsigned i = 0; i < new_factor->size(); ++i) {
+
+            // update new factor
+            unsigned pos = d.position(instantiation);
+            (*new_factor)[i] = f[pos];
+
+            // find next instantiation
+            d.next_instantiation(instantiation, evidence);
         }
 
         return new_factor;
