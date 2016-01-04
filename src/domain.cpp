@@ -20,7 +20,7 @@
 
 namespace dbn {
 
-    Domain::Domain(std::vector<const Variable* > scope, unsigned width) : _scope(scope), _width(width) {
+    Domain::Domain(std::vector<const Variable*> scope, unsigned width) : _scope(scope), _width(width) {
         _offset.reserve(width);
         _size = 1;
         for (int i = _width-1; i >= 0; --i) {

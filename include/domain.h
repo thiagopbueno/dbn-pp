@@ -29,7 +29,7 @@ namespace dbn {
 
     class Domain {
     public:
-        Domain(std::vector<const Variable* > scope, unsigned width);
+        Domain(std::vector<const Variable*> scope, unsigned width);
         Domain() : _width(0), _size(1) { };
 
         unsigned width() const { return _width; };
@@ -68,7 +68,7 @@ namespace dbn {
         friend std::ostream &operator<<(std::ostream &o, const Domain &v); 
 
     private:
-        std::vector<const Variable* > _scope;
+        std::vector<const Variable*> _scope;
         std::vector<unsigned> _offset;
         unsigned _width;
         unsigned _size;

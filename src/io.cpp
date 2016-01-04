@@ -58,7 +58,9 @@ namespace dbn {
         return token;
     }
 
-    void read_variables(unsigned order, std::vector<std::unique_ptr<Variable> > &variables) {
+    void read_variables(unsigned &order, std::vector<std::unique_ptr<Variable>> &variables) {
+        read_next_integer(order);
+
         unsigned sz;
         for (unsigned id = 0; id < order; ++id) {
             read_next_integer(sz);
@@ -66,12 +68,12 @@ namespace dbn {
         }
     }
 
-    void read_factors(unsigned order, std::vector<std::unique_ptr<Variable> > &variables, std::vector<std::shared_ptr<Factor> > &factors) {
+    void read_factors(unsigned order, std::vector<std::unique_ptr<Variable>> &variables, std::vector<std::shared_ptr<Factor>> &factors) {
         unsigned width, id;
         for (unsigned i = 0; i < order; ++i) {
             read_next_integer(width);
 
-            std::vector<const Variable* > scope;
+            std::vector<const Variable*> scope;
             for (unsigned j = 0; j < width; ++j) {
                 read_next_integer(id);
                 scope.push_back(variables[id].get());
@@ -92,9 +94,8 @@ namespace dbn {
         }
     }
 
-    int read_uai_model(unsigned &order, std::vector<std::unique_ptr<Variable> > &variables, std::vector<std::shared_ptr<Factor> > &factors) {
+    int read_uai_model(unsigned &order, std::vector<std::unique_ptr<Variable>> &variables, std::vector<std::shared_ptr<Factor>> &factors) {
         read_file_header();
-        read_next_integer(order);
         read_variables(order, variables);
         read_factors(order, variables, factors);
         return 0;

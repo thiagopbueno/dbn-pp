@@ -24,7 +24,7 @@
 namespace dbn {
 
 	Domain *union_of(const Domain& d1, const Domain& d2) {
-        std::vector<const Variable* > scope;
+        std::vector<const Variable*> scope;
         unsigned total_width;
 
         unsigned width1 = d1.width();
@@ -48,7 +48,7 @@ namespace dbn {
     }
 
     Domain *union_of(const Domain& d1, const Domain& d2, const Variable* var) {
-        std::vector<const Variable* > scope;
+        std::vector<const Variable*> scope;
         unsigned total_width = 0;
 
         unsigned width1 = d1.width();

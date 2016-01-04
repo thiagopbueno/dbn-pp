@@ -27,7 +27,7 @@
 
 using namespace dbn;
 
-void print_elimination_ordering(std::vector<const Variable* > ordering) {
+void print_elimination_ordering(std::vector<const Variable*> ordering) {
     std::cout << "Elimination ordering: { ";
     for (auto pv : ordering) {
         std::cout << pv->id() << " ";
@@ -45,12 +45,12 @@ void print_factor(const Factor &f) {
 int main(int argc, char *argv[])
 {
     unsigned order;
-    std::vector<std::unique_ptr<Variable> > variables;
-    std::vector<std::shared_ptr<Factor> > factors;
+    std::vector<std::unique_ptr<Variable>> variables;
+    std::vector<std::shared_ptr<Factor>> factors;
 
     read_uai_model(order, variables, factors);
 
-    std::vector<const Variable* > ordering {};
+    std::vector<const Variable*> ordering {};
     std::unique_ptr<Factor> factor;
 
     factor = variable_elimination(ordering, factors);

@@ -25,10 +25,10 @@
 
 namespace dbn {
 
-	std::unique_ptr<Factor> variable_elimination(std::vector<const Variable* > &variables, std::vector<std::shared_ptr<Factor> > &factors) {
+	std::unique_ptr<Factor> variable_elimination(std::vector<const Variable*> &variables, std::vector<std::shared_ptr<Factor>> &factors) {
 
-	    std::forward_list<std::shared_ptr<Factor> > flist(factors.begin(), factors.end());
-	    std::forward_list<std::shared_ptr<Factor> > bucket;
+	    std::forward_list<std::shared_ptr<Factor>> flist(factors.begin(), factors.end());
+	    std::forward_list<std::shared_ptr<Factor>> bucket;
 
 		for (auto var: variables) {
 
@@ -43,9 +43,9 @@ namespace dbn {
 			bucket.clear();
 			unsigned b = 0; // bucket size
 
-			std::forward_list<std::shared_ptr<Factor> >::const_iterator pf;
+			std::forward_list<std::shared_ptr<Factor>>::const_iterator pf;
 
-			std::forward_list<std::shared_ptr<Factor> > new_flist;
+			std::forward_list<std::shared_ptr<Factor>> new_flist;
 			for (pf = flist.begin(); pf != flist.end(); ++pf) {
 
 				if ((*pf)->domain().in_scope(var)) {
@@ -72,7 +72,7 @@ namespace dbn {
 			// multiply all factors in bucket and eliminate variable
 			if (b > 0) {
 				std::unique_ptr<Factor> prod(new Factor(1.0));
-				std::forward_list<std::shared_ptr<Factor> >::const_iterator pf = bucket.begin();
+				std::forward_list<std::shared_ptr<Factor>>::const_iterator pf = bucket.begin();
 				while (b > 1) {
 					// std::cout << ">> prod X prod" << std::endl;
 					// std::cout << *prod << std::endl;
@@ -104,13 +104,12 @@ namespace dbn {
 			// }
 			// std::cout << std::endl;
 
-	  		// std::forward_list<std::shared_ptr<Factor> > flist(new_flist.begin(), new_flist.end());
 	  		flist = new_flist;
 		}
 
 		// generate result by multiplying all remaining factors in the pool
 		std::unique_ptr<Factor> prod(new Factor(1.0));
-		std::forward_list<std::shared_ptr<Factor> >::const_iterator pf;
+		std::forward_list<std::shared_ptr<Factor>>::const_iterator pf;
 		for (pf = flist.begin(); pf != flist.end(); ++pf) {
 			prod = std::unique_ptr<Factor>(product(*prod, **pf));
 		}
