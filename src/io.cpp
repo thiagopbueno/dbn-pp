@@ -71,13 +71,13 @@ namespace dbn {
         }
     }
 
-    void read_transition_model(unsigned &transition_order, unordered_map<unsigned, unsigned> &transition) {
+    void read_transition_model(unsigned &transition_order, unordered_map<unsigned,const Variable*> &transition, const vector<unique_ptr<Variable>> &variables) {
         read_next_integer(transition_order);
         for (unsigned i = 0; i < transition_order/2; ++i) {
             unsigned curr, next;
             read_next_integer(curr);
             read_next_integer(next);
-            transition[next] = curr;
+            transition[next] = variables[curr].get();
         }
     }
 
@@ -121,11 +121,11 @@ namespace dbn {
 
     }
 
-    int read_uai_model(unsigned &order, vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors, unordered_map<unsigned, unsigned> &transition, vector<unsigned> &sensor) {
+    int read_uai_model(unsigned &order, vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor) {
         read_file_header();
         read_variables(order, variables);
         unsigned transition_order, sensor_order;
-        read_transition_model(transition_order, transition);
+        read_transition_model(transition_order, transition, variables);
         read_sensor_model(sensor_order, sensor);
         read_factors(order, variables, factors);
         return 0;

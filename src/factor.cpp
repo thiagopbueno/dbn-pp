@@ -67,6 +67,10 @@ namespace dbn {
         else throw "Factor::operator[]: Index out of range.";
     }
 
+    void Factor::change_variables(std::unordered_map<unsigned,const Variable*> renaming) {
+        _domain->modify_scope(renaming);
+    }
+
     ostream &operator<<(ostream &o, const Factor &f) {
         o << "Factor(" << *(f._domain) << ", size:" << f.size() << ", values:[";
         unsigned i;

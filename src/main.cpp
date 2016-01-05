@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     vector<unique_ptr<Variable>> variables;
     vector<shared_ptr<Factor>> factors;
 
-    unordered_map<unsigned, unsigned> transition;
+    unordered_map<unsigned,const Variable*> transition;
     vector<unsigned> sensor;
 
     read_uai_model(order, variables, factors, transition, sensor);
@@ -78,6 +78,24 @@ int main(int argc, char *argv[])
         factor = unique_ptr<Factor>(normalization(*factor));
         cout << *factor << endl << endl;
     }
+
+    cout << ">> CHANGE SCOPE" << endl;
+    cout << *factors[1] << endl;
+    factor = unique_ptr<Factor>(sum_product(*factors[1], Factor(1.0), variables[0].get()));
+    cout << *factor << endl;
+    factor->change_variables(transition);
+    cout << *factor << endl << endl;
+    factor = unique_ptr<Factor>(product(*factors[1], *factors[2]));
+    cout << *factor << endl;
+    transition[0] = variables[1].get();
+    transition[1] = variables[2].get();
+    transition[2] = variables[3].get();
+    factor->change_variables(transition);
+    cout << *factor << endl << endl;
+    factor = unique_ptr<Factor>(new Factor(1.0));
+    cout << *factor << endl;
+    factor->change_variables(transition);
+    cout << *factor << endl << endl;
 
     return 0;
 }

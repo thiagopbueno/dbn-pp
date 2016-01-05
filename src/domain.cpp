@@ -80,6 +80,15 @@ namespace dbn {
         return (it != _var_to_index.end());
     }
 
+    void Domain::modify_scope(std::unordered_map<unsigned,const Variable*> modifier) {
+        for (auto it_modifier : modifier) {
+            if (in_scope(it_modifier.first)) {
+                unsigned index = _var_to_index[it_modifier.first];
+                _scope[index] = it_modifier.second;
+            }
+        }
+    }
+
     unsigned Domain::position_instantiation(vector<unsigned> instantiation) const {
         unsigned pos = 0;
         for (int i = _width-1; i >= 0; --i) {

@@ -43,6 +43,8 @@ namespace dbn {
         bool in_scope(const Variable* v) const;
         bool in_scope(unsigned id) const;
 
+        void modify_scope(std::unordered_map<unsigned,const Variable*> modifier);
+
         void next_instantiation(std::vector<unsigned> &instantiation) const;
         void next_instantiation(std::vector<unsigned> &instantiation, const std::unordered_map<unsigned,unsigned> &evidence) const;
         void update_instantiation_with_evidence(std::vector<unsigned> &instantiation, const std::unordered_map<unsigned,unsigned> &evidence) const;

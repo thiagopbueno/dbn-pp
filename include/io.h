@@ -27,7 +27,7 @@
 
 namespace dbn {
 
-	int read_uai_model(unsigned &order, std::vector<std::unique_ptr<Variable>> &variables, std::vector<std::shared_ptr<Factor>> &factors, std::unordered_map<unsigned, unsigned> &transition, std::vector<unsigned> &sensor);
+	int read_uai_model(unsigned &order, std::vector<std::unique_ptr<Variable>> &variables, std::vector<std::shared_ptr<Factor>> &factors, std::unordered_map<unsigned,const Variable*> &transition, std::vector<unsigned> &sensor);
 
 }
 
