@@ -71,10 +71,19 @@ namespace dbn {
         }
     }
 
+    void read_prior_model(unsigned &prior_order, vector<unsigned> &prior) {
+        read_next_integer(prior_order);
+        unsigned v;
+        for (unsigned i = 0; i < prior_order; ++i) {
+            read_next_integer(v);
+            prior.push_back(v);
+        }
+    }
+
     void read_transition_model(unsigned &transition_order, unordered_map<unsigned,const Variable*> &transition, const vector<unique_ptr<Variable>> &variables) {
         read_next_integer(transition_order);
+        unsigned curr, next;
         for (unsigned i = 0; i < transition_order/2; ++i) {
-            unsigned curr, next;
             read_next_integer(curr);
             read_next_integer(next);
             transition[next] = variables[curr].get();
@@ -83,8 +92,8 @@ namespace dbn {
 
     void read_sensor_model(unsigned &sensor_order, vector<unsigned> &sensor) {
         read_next_integer(sensor_order);
+        unsigned v;
         for (unsigned i = 0; i < sensor_order; ++i) {
-            unsigned v;
             read_next_integer(v);
             sensor.push_back(v);
         }
@@ -104,7 +113,6 @@ namespace dbn {
             factors.emplace_back(new Factor(new Domain(scope)));
         }
 
-
         for (unsigned i = 0; i < order; ++i) {
             unsigned factor_size;
             read_next_integer(factor_size);
@@ -118,13 +126,20 @@ namespace dbn {
             }
             factors[i]->partition() = partition;
         }
-
     }
 
-    int read_uai_model(unsigned &order, vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor) {
+    int read_uai_model(
+        unsigned &order,
+        vector<unique_ptr<Variable>> &variables,
+        vector<shared_ptr<Factor>> &factors,
+        vector<unsigned> &prior,
+        unordered_map<unsigned,const Variable*> &transition,
+        vector<unsigned> &sensor) {
+
         read_file_header();
         read_variables(order, variables);
-        unsigned transition_order, sensor_order;
+        unsigned prior_order, transition_order, sensor_order;
+        read_prior_model(prior_order, prior);
         read_transition_model(transition_order, transition, variables);
         read_sensor_model(sensor_order, sensor);
         read_factors(order, variables, factors);
