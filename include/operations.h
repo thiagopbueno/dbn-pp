@@ -30,6 +30,7 @@ namespace dbn {
     Factor *product(const Factor &f1, const Factor &f2);
     Factor *sum_product(const Factor &f1, const Factor &f2, const Variable *v);
     Factor *conditioning(const Factor &f, const std::unordered_map<unsigned,unsigned> &evidence);
+    Factor *normalization(const Factor &f);
 }
 
 #endif

@@ -26,7 +26,7 @@ namespace dbn {
 
     Domain::Domain() : _width(0), _size(1) {}
 
-    Domain::Domain(vector<const Variable*> scope, unsigned width) : _scope(scope), _width(width) {
+    Domain::Domain(vector<const Variable*> scope) : _scope(scope), _width(scope.size()) {
         _size = 1;
         if (_width > 0) {
             _offset.reserve(_width);
@@ -37,6 +37,8 @@ namespace dbn {
             }
         }
     }
+
+    Domain::Domain(const Domain &domain) : Domain(domain._scope) {}
 
     Domain::Domain(const Domain &domain, const unordered_map<unsigned,unsigned> &evidence) {
         for (auto it_scope : domain._scope) {
@@ -54,6 +56,8 @@ namespace dbn {
             _var_to_index[_scope[i]->id()] = i;
         }
     }
+
+
 
     const Variable *Domain::operator[](unsigned i) const {
         if (i < _width) return _scope[i];

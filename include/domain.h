@@ -30,7 +30,8 @@ namespace dbn {
     class Domain {
     public:
         Domain();
-        Domain(std::vector<const Variable*> scope, unsigned width);
+        Domain(std::vector<const Variable*> scope);
+        Domain(const Domain &domain);
         Domain(const Domain &domain, const std::unordered_map<unsigned,unsigned> &evidence);
 
         unsigned width() const { return _width; };

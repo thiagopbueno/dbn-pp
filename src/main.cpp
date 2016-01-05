@@ -28,54 +28,55 @@
 using namespace std;
 using namespace dbn;
 
-void print_elimination_ordering(std::vector<const Variable*> ordering) {
-    std::cout << "Elimination ordering: { ";
-    for (auto pv : ordering) {
-        std::cout << pv->id() << " ";
-    }
-    std::cout << "}" << std::endl;
-}
-
-void print_factor(const Factor &f) {
-    std::cout << f << std::endl;
-    double prob = 0.0;
-    for (int i = 0; i < f.size(); ++i) { prob += f[i]; }
-    std::cout << "Total Probability = " << prob << std::endl << std::endl;
+void print_elimination_ordering(vector<const Variable*> ordering) {
+    cout << "Elimination ordering: { ";
+    for (auto pv : ordering) { cout << pv->id() << " "; }
+    cout << "}" << endl;
 }
 
 int main(int argc, char *argv[])
 {
     unsigned order;
-    std::vector<std::unique_ptr<Variable>> variables;
-    std::vector<std::shared_ptr<Factor>> factors;
+    vector<unique_ptr<Variable>> variables;
+    vector<shared_ptr<Factor>> factors;
 
-    std::unordered_map<unsigned, unsigned> transition;
-    std::vector<unsigned> sensor;
+    unordered_map<unsigned, unsigned> transition;
+    vector<unsigned> sensor;
 
     read_uai_model(order, variables, factors, transition, sensor);
 
-    std::vector<const Variable*> ordering {};
-    std::unique_ptr<Factor> factor;
+    vector<const Variable*> ordering {};
+    unique_ptr<Factor> factor;
 
     cout << ">> VARIABLE ELIMINATION" << endl;
     factor = variable_elimination(ordering, factors);
     print_elimination_ordering(ordering);
-    print_factor(*factor);
+    cout << *factor << endl;
 
     for (auto const& pv : variables) {
         ordering.push_back(pv.get());
         factor = variable_elimination(ordering, factors);
         print_elimination_ordering(ordering);
-        print_factor(*factor);
+        cout << *factor << endl << endl;
     }
 
     cout << ">> CONDITIONING" << endl;
-    std::unordered_map<unsigned,unsigned> evidence;
+    unordered_map<unsigned,unsigned> evidence;
     evidence[0] = 1;
+    evidence[1] = 0;
+
+    factor = unique_ptr<Factor>(product(*factors[1], *factors[2]));
+    cout << *factor << endl;
+    factor = unique_ptr<Factor>(conditioning(*factor, evidence));
+    cout << *factor << endl;
+    factor = unique_ptr<Factor>(normalization(*factor));
+    cout << *factor << endl << endl;
 
     for (auto const& pf : factors) {
         factor = unique_ptr<Factor>(conditioning(*pf, evidence));
-        print_factor(*factor);
+        cout << *factor << endl;
+        factor = unique_ptr<Factor>(normalization(*factor));
+        cout << *factor << endl << endl;
     }
 
     return 0;

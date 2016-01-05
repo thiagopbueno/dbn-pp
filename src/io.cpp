@@ -101,19 +101,24 @@ namespace dbn {
                 scope.push_back(variables[id].get());
             }
 
-            factors.emplace_back(new Factor(new Domain(scope, width)));
+            factors.emplace_back(new Factor(new Domain(scope)));
         }
 
-        unsigned factor_size;
-        double value;
+
         for (unsigned i = 0; i < order; ++i) {
+            unsigned factor_size;
             read_next_integer(factor_size);
 
+            double partition = 0;
             for (unsigned j = 0; j < factor_size; ++j) {
+                double value;
                 read_next_double(value);
                 (*(factors[i]))[j] = value;
+                partition += value;
             }
+            factors[i]->partition() = partition;
         }
+
     }
 
     int read_uai_model(unsigned &order, vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors, unordered_map<unsigned, unsigned> &transition, vector<unsigned> &sensor) {

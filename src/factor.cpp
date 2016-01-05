@@ -20,7 +20,42 @@
 
 #include <iostream>
 
+using namespace std;
+
 namespace dbn {
+
+    Factor::Factor(Domain *domain) :
+        _domain(std::unique_ptr<Domain>(domain)),
+        _values(std::vector<double>(domain->size())),
+        _partition(0) {}
+
+    Factor::Factor(Domain *domain, double value) :
+        _domain(std::unique_ptr<Domain>(domain)),
+        _values(std::vector<double>(domain->size(), value)),
+        _partition(domain->size() * value) {}
+
+    Factor::Factor(double value) :
+        _domain(std::unique_ptr<Domain>(new Domain)),
+        _values(std::vector<double>(1, value)),
+        _partition(value) {}
+
+    Factor::Factor(const Factor &f, bool normalization) :
+        _domain(unique_ptr<Domain>(new Domain(f.domain()))),
+        _values(vector<double>(f.size())) {
+        unsigned sz = f.size();
+        if (normalization) {
+            for (unsigned i = 0; i < sz; ++i) {
+                _values[i] = f._values[i]/f._partition;
+            }
+            _partition = 1.0;
+        }
+        else {
+            for (unsigned i = 0; i < sz; ++i) {
+                _values[i] = f._values[i];
+            }
+            _partition = f._partition;
+        }
+    }
 
     const double &Factor::operator[](unsigned i) const {
         if (i < size()) return _values[i];
@@ -32,13 +67,13 @@ namespace dbn {
         else throw "Factor::operator[]: Index out of range.";
     }
 
-    std::ostream &operator<<(std::ostream &o, const Factor &f) {
+    ostream &operator<<(ostream &o, const Factor &f) {
         o << "Factor(" << *(f._domain) << ", size:" << f.size() << ", values:[";
         unsigned i;
         for (i = 0; i < f.size()-1; ++i) { 
             o << f._values[i] << ", ";
         }
-        o << f._values[i] << "])";
+        o << f._values[i] << "], partition:" << f._partition << ")";
         return o;
     }
 

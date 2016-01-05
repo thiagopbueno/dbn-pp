@@ -26,10 +26,8 @@ namespace dbn {
 
 	Domain *union_of(const Domain& d1, const Domain& d2) {
         vector<const Variable*> scope;
-        unsigned total_width;
 
         unsigned width1 = d1.width();
-        total_width = width1;
 
         for (unsigned i = 0; i < width1; ++i) {
             const Variable *v = d1[i];
@@ -41,24 +39,20 @@ namespace dbn {
             const Variable *v = d2[i];
             if (!d1.in_scope(v)) {
                 scope.push_back(v);
-                total_width++;
             }
         }
 
-        return new Domain(scope, total_width);
+        return new Domain(scope);
     }
 
     Domain *union_of(const Domain& d1, const Domain& d2, const Variable* var) {
         vector<const Variable*> scope;
-        unsigned total_width = 0;
 
         unsigned width1 = d1.width();
-
         for (unsigned i = 0; i < width1; ++i) {
             const Variable *v = d1[i];
             if (v->id() != var->id()) {
                 scope.push_back(v);
-                total_width++;
             }
         }
 
@@ -67,11 +61,10 @@ namespace dbn {
             const Variable *v = d2[i];
             if (var->id() != v->id() && !d1.in_scope(v)) {
                 scope.push_back(v);
-                total_width++;
             }
         }
 
-        return new Domain(scope, total_width);
+        return new Domain(scope);
     }
 
 	Factor *product(const Factor& f1, const Factor& f2) {
@@ -82,6 +75,8 @@ namespace dbn {
 		Factor *new_factor = new Factor(d, 0.0);
 
         vector<unsigned> instantiation(new_factor->width(), 0);
+
+        double partition = 0;
         for (unsigned i = 0; i < new_factor->size(); ++i) {
 
             // find position in linearization of consistent instantiation
@@ -89,11 +84,14 @@ namespace dbn {
             unsigned pos2 = d2.position_consistent_instantiation(instantiation, *d);
 
             // set product factor value
-            (*new_factor)[i] = f1[pos1] * f2[pos2];
+            double value = f1[pos1] * f2[pos2];
+            (*new_factor)[i] = value;
+            partition += value;
 
             // find next instantiation
             d->next_instantiation(instantiation);
         }
+        new_factor->partition() = partition;
 
         return new_factor;
     }
@@ -106,29 +104,26 @@ namespace dbn {
         Factor *new_factor = new Factor(d, 0.0);
 
         vector<unsigned> instantiation(new_factor->width(), 0);
+
+        double partition = 0;
         for (unsigned i = 0; i < new_factor->size(); ++i) {
 
-            // find consistent instantiation for both factors
-            // vector<unsigned> inst1 = d->consistent_instantiation(instantiation, d1);
-            // vector<unsigned> inst2 = d->consistent_instantiation(instantiation, d2);
-
             for (unsigned val = 0; val < v->size(); ++val) {
-
-                // find next instantiation with variable value
-                // if (d1.in_scope(v)) { inst1[d1[v]] = val; }
-                // if (d2.in_scope(v)) { inst2[d2[v]] = val; }
 
                 // find position in linearization
                 unsigned pos1 = d1.position_consistent_instantiation(instantiation, *d, v, val);
                 unsigned pos2 = d2.position_consistent_instantiation(instantiation, *d, v, val);
 
                 // update product factor value
-                (*new_factor)[i] += f1[pos1] * f2[pos2];
+                double value = f1[pos1] * f2[pos2];
+                (*new_factor)[i] += value;
+                partition += value;
             }
 
             // find next instantiation
             d->next_instantiation(instantiation);
         }
+        new_factor->partition() = partition;
 
         return new_factor;
     }
@@ -142,16 +137,25 @@ namespace dbn {
         vector<unsigned> instantiation(f.width(), 0);
         d.update_instantiation_with_evidence(instantiation, evidence);
 
+        double partition = 0;
         for (unsigned i = 0; i < new_factor->size(); ++i) {
+
             // update new factor
             unsigned pos = d.position_instantiation(instantiation);
-            (*new_factor)[i] = f[pos];
+            double value = f[pos];
+            (*new_factor)[i] = value;
+            partition += value;
 
             // find next instantiation
             d.next_instantiation(instantiation, evidence);
         }
+        new_factor->partition() = partition;
 
         return new_factor;
+    }
+
+    Factor *normalization(const Factor &f) {
+        return new Factor(f, true);
     }
 
 }

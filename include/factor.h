@@ -28,13 +28,15 @@ namespace dbn {
 
     class Factor {
     public:
-        Factor(Domain *domain) : _domain(std::unique_ptr<Domain>(domain)), _values(std::vector<double>(domain->size())) { };
-        Factor(Domain *domain, double value) : _domain(std::unique_ptr<Domain>(domain)), _values(std::vector<double>(domain->size(), value)) { };
-        Factor(double value) : _domain(std::unique_ptr<Domain>(new Domain)), _values(std::vector<double>(1, value)) { };
+        Factor(Domain *domain);
+        Factor(Domain *domain, double value);
+        Factor(double value);
+        Factor(const Factor &f, bool normalization = false);
 
         const Domain &domain() const { return *_domain; };
         unsigned size()  const { return _domain->size();  };
         unsigned width() const { return _domain->width(); };
+        double &partition() { return _partition; };
 
         const double &operator[](unsigned i) const;
         double &operator[](unsigned i);
@@ -44,6 +46,7 @@ namespace dbn {
     private:
         std::unique_ptr<Domain> _domain;
         std::vector<double> _values;
+        double _partition;
     };
 
 }
