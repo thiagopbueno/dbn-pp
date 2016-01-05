@@ -82,9 +82,13 @@ namespace dbn {
 
     void Domain::modify_scope(std::unordered_map<unsigned,const Variable*> modifier) {
         for (auto it_modifier : modifier) {
-            if (in_scope(it_modifier.first)) {
-                unsigned index = _var_to_index[it_modifier.first];
-                _scope[index] = it_modifier.second;
+            unsigned id = it_modifier.first;
+            const Variable *variable = it_modifier.second;
+            if (in_scope(id)) {
+                unsigned index = _var_to_index[id];
+                _scope[index] = variable;
+                _var_to_index.erase(id);
+                _var_to_index[variable->id()] = index;
             }
         }
     }
