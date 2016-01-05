@@ -27,8 +27,18 @@
 
 namespace dbn {
 
-    std::unique_ptr<Factor> variable_elimination(std::vector<const Variable*> &variables, std::vector<std::shared_ptr<Factor>> &factors);
+	std::unique_ptr<Factor> variable_elimination(
+		std::vector<const Variable*> &variables,
+		std::vector<std::shared_ptr<Factor>> &factors
+	);
 
+	std::vector<std::shared_ptr<Factor>> filtering(
+		std::vector<std::shared_ptr<Factor>> &factors,
+		std::vector<unsigned> &prior,
+		std::unordered_map<unsigned,const Variable*> &transition,
+		std::vector<unsigned> &sensor,
+		std::vector<std::unordered_map<unsigned,unsigned>> &observations
+	);
 }
 
 #endif

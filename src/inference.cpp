@@ -16,36 +16,31 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DBN.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <forward_list>
-#include <utility>
-#include <iostream>
-
 #include "inference.h"
 #include "operations.h"
 
+#include <forward_list>
+
+using namespace std;
+
 namespace dbn {
 
-	std::unique_ptr<Factor> variable_elimination(std::vector<const Variable*> &variables, std::vector<std::shared_ptr<Factor>> &factors) {
+	unique_ptr<Factor> variable_elimination(
+		vector<const Variable*> &variables,
+		vector<shared_ptr<Factor>> &factors) {
 
-	    std::forward_list<std::shared_ptr<Factor>> flist(factors.begin(), factors.end());
-	    std::forward_list<std::shared_ptr<Factor>> bucket;
+	    forward_list<shared_ptr<Factor>> flist(factors.begin(), factors.end());
+	    forward_list<shared_ptr<Factor>> bucket;
 
 		for (auto var: variables) {
-
-			// std::cout << ">> Eliminating variable: " << *var << std::endl;
-
-			// std::cout << ">> All factors:" << std::endl;
-			// for (auto f : flist) {
-			// 	std::cout << *f << std::endl;
-			// }
 
 			// select all factors with var in its scope
 			bucket.clear();
 			unsigned b = 0; // bucket size
 
-			std::forward_list<std::shared_ptr<Factor>>::const_iterator pf;
+			forward_list<shared_ptr<Factor>>::const_iterator pf;
 
-			std::forward_list<std::shared_ptr<Factor>> new_flist;
+			forward_list<shared_ptr<Factor>> new_flist;
 			for (pf = flist.begin(); pf != flist.end(); ++pf) {
 
 				if ((*pf)->domain().in_scope(var)) {
@@ -57,64 +52,101 @@ namespace dbn {
 				}
 			}
 
-			// std::cout << ">> Bucket:" << std::endl;
-			// for (auto f : bucket) {
-			// 	std::cout << *f << std::endl;
-			// }
-
-			// std::cout << ">> Remaining factors:" << std::endl;
-			// for (auto f : new_flist) {
-			// 	std::cout << *f << std::endl;
-			// }
-
 			flist = new_flist;
 
 			// multiply all factors in bucket and eliminate variable
 			if (b > 0) {
-				std::unique_ptr<Factor> prod(new Factor(1.0));
-				std::forward_list<std::shared_ptr<Factor>>::const_iterator pf = bucket.begin();
+				unique_ptr<Factor> prod(new Factor(1.0));
+				forward_list<shared_ptr<Factor>>::const_iterator pf = bucket.begin();
+
 				while (b > 1) {
-					// std::cout << ">> prod X prod" << std::endl;
-					// std::cout << *prod << std::endl;
-					// std::cout << **pf << std::endl;
-
-					std::unique_ptr<Factor> p(product(*prod, **pf));
-
-					// std::cout << "ANS: ";
-					// std::cout << *p << std::endl;
-
-					prod = std::move(p);
+					unique_ptr<Factor> p(product(*prod, **pf));
+					prod = move(p);
 					pf++;
 					b--;
 				}
 
-				std::unique_ptr<Factor> p(sum_product(*prod, **pf, var));
+				unique_ptr<Factor> p(sum_product(*prod, **pf, var));
 
-				// std::cout << ">> sum_prod" << std::endl;
-				// std::cout << *prod << std::endl;
-				// std::cout << **pf << std::endl;
-				// std::cout << *p << std::endl;
-
-				new_flist.push_front(std::move(p));
+				new_flist.push_front(move(p));
 	  		}
-
-			// std::cout << ">> New list:" << std::endl;
-			// for (auto f : new_flist) {
-			// 	std::cout << *f << std::endl;
-			// }
-			// std::cout << std::endl;
 
 	  		flist = new_flist;
 		}
 
 		// generate result by multiplying all remaining factors in the pool
-		std::unique_ptr<Factor> prod(new Factor(1.0));
-		std::forward_list<std::shared_ptr<Factor>>::const_iterator pf;
+		unique_ptr<Factor> prod(new Factor(1.0));
+		forward_list<shared_ptr<Factor>>::const_iterator pf;
 		for (pf = flist.begin(); pf != flist.end(); ++pf) {
-			prod = std::unique_ptr<Factor>(product(*prod, **pf));
+			prod = unique_ptr<Factor>(product(*prod, **pf));
 		}
 
 		return prod;
+	}
+
+	vector<shared_ptr<Factor>> filtering(
+		vector<shared_ptr<Factor>> &factors,
+		std::vector<unsigned> &prior,
+		unordered_map<unsigned,const Variable*> &transition,
+		vector<unsigned> &sensor,
+		vector<unordered_map<unsigned,unsigned>> &observations) {
+
+		// estimates
+		vector<shared_ptr<Factor>> estimates;
+
+		// prior model
+		unique_ptr<Factor> prior_model = unique_ptr<Factor>(new Factor(1.0));
+		for (auto id : prior) {
+			prior_model = unique_ptr<Factor>(product(*prior_model, *factors[id]));
+		}
+
+		// sensor model
+		unique_ptr<Factor> sensor_model = unique_ptr<Factor>(new Factor(1.0));
+		for (auto id : sensor) {
+			sensor_model = unique_ptr<Factor>(product(*sensor_model, *factors[id]));
+		}
+
+		// initialize forward message
+		shared_ptr<Factor> forward = make_shared<Factor>(1.0);
+		forward = unique_ptr<Factor>(product(*forward, *prior_model));
+
+		// variable elimination
+		vector<const Variable*> ordering;
+		vector<shared_ptr<Factor>> sum_prod_factors;
+		for (auto it_transition : transition) {
+			unsigned id_prime = it_transition.first;
+			const Variable *variable = it_transition.second;
+			ordering.push_back(variable);
+			sum_prod_factors.push_back(factors[id_prime]);
+		}
+
+		for (auto evidence : observations) {
+
+			sum_prod_factors.push_back(forward);
+
+			// compute sum_product factors
+			unique_ptr<Factor> sum_prod = variable_elimination(ordering, sum_prod_factors);
+			sum_prod->change_variables(transition);
+
+			// add observation from time t
+			unique_ptr<Factor> evidence_t = unique_ptr<Factor>(conditioning(*sensor_model, evidence));
+
+			// unique_ptr<Factor> evidence_t = unique_ptr<Factor>(new Factor(1.0));
+			// for (auto sensor_id : sensor) {
+			// 	unique_ptr<Factor> sensor_factor = unique_ptr<Factor>(conditioning(*factors[sensor_id], evidence));
+			// 	evidence_t = unique_ptr<Factor>(product(*evidence_t, *sensor_factor));
+			// }
+
+			forward = unique_ptr<Factor>(product(*evidence_t, *sum_prod));
+			forward = unique_ptr<Factor>(normalization(*forward));
+
+			// add new estimate to filtering list
+			estimates.push_back(forward);
+
+			sum_prod_factors.pop_back();
+		}
+
+		return estimates;
 	}
 
 }

@@ -40,62 +40,33 @@ int main(int argc, char *argv[])
     vector<unique_ptr<Variable>> variables;
     vector<shared_ptr<Factor>> factors;
 
+    vector<unsigned> prior;
     unordered_map<unsigned,const Variable*> transition;
     vector<unsigned> sensor;
 
-    read_uai_model(order, variables, factors, transition, sensor);
+    read_uai_model(order, variables, factors, prior, transition, sensor);
 
-    vector<const Variable*> ordering {};
-    unique_ptr<Factor> factor;
+    cout << ">> FILTERING" << endl;
 
-    cout << ">> VARIABLE ELIMINATION" << endl;
-    factor = variable_elimination(ordering, factors);
-    print_elimination_ordering(ordering);
-    cout << *factor << endl;
+    vector<unordered_map<unsigned,unsigned>> observations;
+    observations.push_back({{2, 0}, {3, 0}});
+    observations.push_back({{2, 1}, {3, 0}});
+    observations.push_back({{2, 1}, {3, 1}});
 
-    for (auto const& pv : variables) {
-        ordering.push_back(pv.get());
-        factor = variable_elimination(ordering, factors);
-        print_elimination_ordering(ordering);
-        cout << *factor << endl << endl;
+    vector<shared_ptr<Factor>> estimates = filtering(factors, prior, transition, sensor, observations);
+    unsigned t = 1;
+    for (auto const& pf : estimates) {
+        cout << "@ t = " << t << endl;
+        cout << "observations: {";
+        for (auto it_evidence : observations[t-1]) {
+            unsigned id = it_evidence.first;
+            unsigned value = it_evidence.second;
+            cout << " " << id << ":" << value;
+        }
+        cout << " }" << endl;
+        cout << *pf << endl << endl;
+        ++t;
     }
-
-    cout << ">> CONDITIONING" << endl;
-    unordered_map<unsigned,unsigned> evidence;
-    evidence[0] = 1;
-    evidence[1] = 0;
-
-    factor = unique_ptr<Factor>(product(*factors[1], *factors[2]));
-    cout << *factor << endl;
-    factor = unique_ptr<Factor>(conditioning(*factor, evidence));
-    cout << *factor << endl;
-    factor = unique_ptr<Factor>(normalization(*factor));
-    cout << *factor << endl << endl;
-
-    for (auto const& pf : factors) {
-        factor = unique_ptr<Factor>(conditioning(*pf, evidence));
-        cout << *factor << endl;
-        factor = unique_ptr<Factor>(normalization(*factor));
-        cout << *factor << endl << endl;
-    }
-
-    cout << ">> CHANGE SCOPE" << endl;
-    cout << *factors[1] << endl;
-    factor = unique_ptr<Factor>(sum_product(*factors[1], Factor(1.0), variables[0].get()));
-    cout << *factor << endl;
-    factor->change_variables(transition);
-    cout << *factor << endl << endl;
-    factor = unique_ptr<Factor>(product(*factors[1], *factors[2]));
-    cout << *factor << endl;
-    transition[0] = variables[1].get();
-    transition[1] = variables[2].get();
-    transition[2] = variables[3].get();
-    factor->change_variables(transition);
-    cout << *factor << endl << endl;
-    factor = unique_ptr<Factor>(new Factor(1.0));
-    cout << *factor << endl;
-    factor->change_variables(transition);
-    cout << *factor << endl << endl;
 
     return 0;
 }
