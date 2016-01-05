@@ -17,4 +17,4 @@ bin/main.o: src/main.cpp
 .PHONY: clean
 
 clean:
-	rm -rfv dbn bin/*.o
+	rm -rfv dbn bin/*.o dbn.dSYM/
