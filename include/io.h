@@ -23,18 +23,24 @@
 #include "factor.h"
 
 #include <vector>
+#include <unordered_map>
 #include <memory>
 
 namespace dbn {
 
 	int read_uai_model(
-		char *filename,
+		const char *filename,
 		unsigned &order,
 		std::vector<std::unique_ptr<Variable>> &variables,
 		std::vector<std::shared_ptr<Factor>> &factors,
 		std::vector<unsigned> &prior,
 		std::unordered_map<unsigned,const Variable*> &transition,
 		std::vector<unsigned> &sensor
+	);
+
+	int read_observations(
+		const char *filename,
+		std::vector<std::unordered_map<unsigned,unsigned>> &observations
 	);
 
 }

@@ -38,16 +38,14 @@ int main(int argc, char *argv[])
     unordered_map<unsigned,const Variable*> transition;
     vector<unsigned> sensor;
 
+    vector<unordered_map<unsigned,unsigned>> observations;
+
     if (read_uai_model(argv[1], order, variables, factors, prior, transition, sensor)) return -1;
+    if (read_observations(argv[2], observations)) return -2;
 
     cout << ">> FILTERING" << endl;
-
-    vector<unordered_map<unsigned,unsigned>> observations;
-    observations.push_back({{2, 0}, {3, 0}});
-    observations.push_back({{2, 1}, {3, 0}});
-    observations.push_back({{2, 1}, {3, 1}});
-
     vector<shared_ptr<Factor>> estimates = filtering(factors, prior, transition, sensor, observations);
+
     unsigned t = 1;
     for (auto const& pf : estimates) {
         cout << "@ t = " << t << endl;

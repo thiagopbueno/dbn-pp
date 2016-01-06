@@ -130,7 +130,7 @@ namespace dbn {
     }
 
     int read_uai_model(
-        char *filename,
+        const char *filename,
         unsigned &order,
         vector<unique_ptr<Variable>> &variables,
         vector<shared_ptr<Factor>> &factors,
@@ -156,4 +156,38 @@ namespace dbn {
         }
     }
 
+
+    int read_observations(
+        const char *filename,
+        vector<unordered_map<unsigned,unsigned>> &observations) {
+
+        ifstream input_file(filename);
+        if (input_file.is_open()) {
+            unsigned length, width;
+
+            read_next_integer(input_file, length);
+            read_next_integer(input_file, width);
+
+            for (unsigned t = 0; t < length; ++t) {
+                observations.emplace_back();
+            }
+
+            for (unsigned i = 0; i < width; ++i) {
+                unsigned id;
+                read_next_integer(input_file, id);
+                for (unsigned t = 0; t < length; ++t) {
+                    unsigned evidence;
+                    read_next_integer(input_file, evidence);
+                    observations[t][id] = evidence;
+                }
+            }
+
+            input_file.close();
+            return 0;
+        }
+        else {
+            cerr << "Error: couldn't read file " << filename << endl;
+            return -1;
+        }
+    }
 }
