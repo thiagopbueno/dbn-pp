@@ -28,12 +28,6 @@
 using namespace std;
 using namespace dbn;
 
-void print_elimination_ordering(vector<const Variable*> ordering) {
-    cout << "Elimination ordering: { ";
-    for (auto pv : ordering) { cout << pv->id() << " "; }
-    cout << "}" << endl;
-}
-
 int main(int argc, char *argv[])
 {
     unsigned order;
@@ -44,7 +38,7 @@ int main(int argc, char *argv[])
     unordered_map<unsigned,const Variable*> transition;
     vector<unsigned> sensor;
 
-    read_uai_model(order, variables, factors, prior, transition, sensor);
+    if (read_uai_model(argv[1], order, variables, factors, prior, transition, sensor)) return -1;
 
     cout << ">> FILTERING" << endl;
 

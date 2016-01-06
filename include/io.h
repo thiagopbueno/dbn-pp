@@ -28,6 +28,7 @@
 namespace dbn {
 
 	int read_uai_model(
+		char *filename,
 		unsigned &order,
 		std::vector<std::unique_ptr<Variable>> &variables,
 		std::vector<std::shared_ptr<Factor>> &factors,

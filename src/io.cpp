@@ -20,6 +20,7 @@
 #include "domain.h"
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -29,84 +30,84 @@ using namespace std;
 
 namespace dbn {
 
-    bool read_next_token(string &token) {
-        while (cin) {
-            cin >> token;
+    bool read_next_token(ifstream &input_file, string &token) {
+        while (input_file) {
+            input_file >> token;
             if (token[0] != '#') return true;
-            getline(cin, token);  // ignore rest of line
+            getline(input_file, token);  // ignore rest of line
         }
         return false;
     }
 
-    bool read_next_integer(unsigned &i) {
+    bool read_next_integer(ifstream &input_file, unsigned &i) {
         string token;
-        if (!read_next_token(token)) return false;
+        if (!read_next_token(input_file, token)) return false;
         i = stoi(token);
         return true;
     }
 
-    bool read_next_double(double &d) {
+    bool read_next_double(ifstream &input_file, double &d) {
         string token;
-        if (!read_next_token(token)) return false;
+        if (!read_next_token(input_file, token)) return false;
         d = stod(token);
         return true;
     }
 
-    string read_file_header() {
+    string read_file_header(ifstream &input_file) {
         string token;
-        read_next_token(token);
+        read_next_token(input_file, token);
         if (token.compare("DBAYES") != 0)  {
             cerr << "ERROR! Expected 'DBAYES' file header, found: " << token << endl;
         }
         return token;
     }
 
-    void read_variables(unsigned &order, vector<unique_ptr<Variable>> &variables) {
-        read_next_integer(order);
+    void read_variables(ifstream &input_file, unsigned &order, vector<unique_ptr<Variable>> &variables) {
+        read_next_integer(input_file, order);
 
         unsigned sz;
         for (unsigned id = 0; id < order; ++id) {
-            read_next_integer(sz);
+            read_next_integer(input_file, sz);
             variables.emplace_back(new Variable(id, sz));
         }
     }
 
-    void read_prior_model(unsigned &prior_order, vector<unsigned> &prior) {
-        read_next_integer(prior_order);
+    void read_prior_model(ifstream &input_file, unsigned &prior_order, vector<unsigned> &prior) {
+        read_next_integer(input_file, prior_order);
         unsigned v;
         for (unsigned i = 0; i < prior_order; ++i) {
-            read_next_integer(v);
+            read_next_integer(input_file, v);
             prior.push_back(v);
         }
     }
 
-    void read_transition_model(unsigned &transition_order, unordered_map<unsigned,const Variable*> &transition, const vector<unique_ptr<Variable>> &variables) {
-        read_next_integer(transition_order);
+    void read_transition_model(ifstream &input_file, unsigned &transition_order, unordered_map<unsigned,const Variable*> &transition, const vector<unique_ptr<Variable>> &variables) {
+        read_next_integer(input_file, transition_order);
         unsigned curr, next;
         for (unsigned i = 0; i < transition_order/2; ++i) {
-            read_next_integer(curr);
-            read_next_integer(next);
+            read_next_integer(input_file, curr);
+            read_next_integer(input_file, next);
             transition[next] = variables[curr].get();
         }
     }
 
-    void read_sensor_model(unsigned &sensor_order, vector<unsigned> &sensor) {
-        read_next_integer(sensor_order);
+    void read_sensor_model(ifstream &input_file, unsigned &sensor_order, vector<unsigned> &sensor) {
+        read_next_integer(input_file, sensor_order);
         unsigned v;
         for (unsigned i = 0; i < sensor_order; ++i) {
-            read_next_integer(v);
+            read_next_integer(input_file, v);
             sensor.push_back(v);
         }
     }
 
-    void read_factors(unsigned order, vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors) {
+    void read_factors(ifstream &input_file, unsigned order, vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors) {
         unsigned width, id;
         for (unsigned i = 0; i < order; ++i) {
-            read_next_integer(width);
+            read_next_integer(input_file, width);
 
             vector<const Variable*> scope;
             for (unsigned j = 0; j < width; ++j) {
-                read_next_integer(id);
+                read_next_integer(input_file, id);
                 scope.push_back(variables[id].get());
             }
 
@@ -115,12 +116,12 @@ namespace dbn {
 
         for (unsigned i = 0; i < order; ++i) {
             unsigned factor_size;
-            read_next_integer(factor_size);
+            read_next_integer(input_file, factor_size);
 
             double partition = 0;
             for (unsigned j = 0; j < factor_size; ++j) {
                 double value;
-                read_next_double(value);
+                read_next_double(input_file, value);
                 (*(factors[i]))[j] = value;
                 partition += value;
             }
@@ -129,6 +130,7 @@ namespace dbn {
     }
 
     int read_uai_model(
+        char *filename,
         unsigned &order,
         vector<unique_ptr<Variable>> &variables,
         vector<shared_ptr<Factor>> &factors,
@@ -136,14 +138,22 @@ namespace dbn {
         unordered_map<unsigned,const Variable*> &transition,
         vector<unsigned> &sensor) {
 
-        read_file_header();
-        read_variables(order, variables);
-        unsigned prior_order, transition_order, sensor_order;
-        read_prior_model(prior_order, prior);
-        read_transition_model(transition_order, transition, variables);
-        read_sensor_model(sensor_order, sensor);
-        read_factors(order, variables, factors);
-        return 0;
+        ifstream input_file(filename);
+        if (input_file.is_open()) {
+            read_file_header(input_file);
+            read_variables(input_file, order, variables);
+            unsigned prior_order, transition_order, sensor_order;
+            read_prior_model(input_file, prior_order, prior);
+            read_transition_model(input_file, transition_order, transition, variables);
+            read_sensor_model(input_file, sensor_order, sensor);
+            read_factors(input_file, order, variables, factors);
+            input_file.close();
+            return 0;
+        }
+        else {
+            cerr << "Error: couldn't read file " << filename << endl;
+            return -1;
+        }
     }
 
 }
