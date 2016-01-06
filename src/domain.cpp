@@ -142,22 +142,22 @@ namespace dbn {
 
     void Domain::next_instantiation(vector<unsigned> &instantiation) const {
         int j;
-        for (j = instantiation.size()-1; j >= 0 && instantiation[j] == 1; --j) {
+        for (j = instantiation.size()-1; j >= 0 && instantiation[j] == _scope[j]->size()-1; --j) {
             instantiation[j] = 0;
         }
         if (j >= 0) {
-            instantiation[j] = 1;
+            instantiation[j]++;
         }
     }
 
     void Domain::next_instantiation(vector<unsigned> &instantiation, const unordered_map<unsigned,unsigned> &evidence) const {
         int j;
-        for (j = instantiation.size()-1; j >= 0 && (evidence.count(_scope[j]->id()) || instantiation[j] == 1); --j) {
+        for (j = instantiation.size()-1; j >= 0 && (evidence.count(_scope[j]->id()) || instantiation[j] == _scope[j]->size()-1); --j) {
             if (evidence.count(_scope[j]->id())) continue;
             instantiation[j] = 0;
         }
         if (j >= 0) {
-            instantiation[j] = 1;
+            instantiation[j]++;
         }
     }
 
