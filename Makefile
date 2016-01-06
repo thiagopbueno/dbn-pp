@@ -5,6 +5,9 @@ OBJ=bin/variable.o bin/domain.o bin/factor.o bin/io.o bin/operations.o bin/infer
 
 all: dbn
 
+test: dbn
+	valgrind --leak-check=full --dsymutil=yes --suppressions=dbn.supp ./dbn data/models/enough-sleep.duai data/models/enough-sleep.evidence
+
 dbn: $(OBJ)
 	$(CC) -o $@ $^
 
