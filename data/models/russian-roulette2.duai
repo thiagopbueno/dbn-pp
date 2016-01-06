@@ -1,0 +1,125 @@
+# Roleta russa
+#
+# Você é um policial infiltrado num grupo criminoso e como parte do ritual de entrada
+# você é "convidado" a jogar roleta russa com um grupo de pessoa usando dois revólvers
+# idênticos. Inicialmente, cada revólver é carregado com um única bala em uma posição
+# aleatória do tambor. A cada iteração, uma pessoa seleciona uma das armas aleatoriamente
+# e aperta o gatilho. Quando chega sua vez, você precisa decidir se continua jogando,
+# ou se você se revela terminando com o jogo (terminando com uma longa investigação),
+# baseado na probabilidade da arma disparar. 
+#
+# Convencione que cada arma possui um tambor com 6 lugares numerados de 0 a 5 em
+# sentido anti-horário. O tambor gira em sentido horário de forma que a cada disparo
+# a bala move-se da câmara i ara câmara i-1 (exceto quando ela estava na câmara 0,
+# quando ela move-se para câmara 5). 
+#
+# As variáveis de estado são:
+#
+# G(t): arma selecionada no t-ésimo instante.
+# L1(t): arma 1 carregada no t-ésimo instante.
+# L2(t): arma 2 carregada no t-ésimo instante.
+# B1(t): câmara selecionada para disparo na arma 1 antes do t-ésimo instante.
+# B2(t): câmara selecionada para disparo na arma 2 antes do t-ésimo instante.
+# S1(t): se houve tiro da arma 1 no t-ésimo instante.
+# S2(t): se houve tiro da arma 2 no t-ésimo instante.
+#
+# A variável de observação é:
+# D(t): se houve tiro no t-ésimo instante.
+#
+
+DBAYES
+
+# Variables
+15
+2 # 0 G   {1,2}
+2 # 1 G'  {1,2}
+2 # 2 L1  {Sim,Não}
+2 # 3 L1' {Sim,Não}
+2 # 4 L2  {Sim,Não}
+2 # 5 L2' {Sim,Não}
+6 # 6 B1  {0,1,...,5}
+6 # 7 B1' {0,1,...,5}
+6 # 8 B2  {0,1,...,5}
+6 # 9 B2' {0,1,...,5}
+2 # 10 S1  {Sim,Não}
+2 # 11 S1' {Sim,Não}
+2 # 12 S2  {Sim,Não}
+2 # 13 S2' {Sim,Não}
+2 # 14 D   {Sim,Não}
+
+# Prior
+6 0 2 4 6 8 10 12
+
+# Transition
+14 0 1 2 3 4 5 6 7 8 9 10 11 12 13
+
+# Sensor
+1 14
+
+# Domains
+1 0
+1 1
+1 2
+4 3 2 6 0
+1 4
+4 5 4 8 0
+1 6
+3 7 0 6
+1 8
+3 9 0 8
+1 10
+5 11 10 2 6 0
+1 12 
+5 13 12 4 8 0
+3 14 10 12
+
+
+# Factors
+
+# Pr(G=i) = 1/2
+2 0.5 0.5
+
+# Pr(G'=i) = 1/2
+2 0.5 0.5
+
+# Pr(L1)
+2 0 1
+
+# Pr(L1'|L1,B1,G)
+48 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 0 1 0 1 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 1 0 1 0 1 0 1 0 1
+
+# Pr(L2)
+2 0 1
+
+# Pr(L2'|L2,B2,G)
+48 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 0 1 0 1 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 1 0 1 0 1 0 1 0 1
+
+# Pr(B1=i) = 1/6
+6 0.1666666667 0.1666666667 0.1666666667 0.1666666667 0.1666666667 0.1666666667
+
+# Pr(B1'|G,B1)
+# B1(t) = i sse (G(t-1) = 1 e B1(t-1) = i + 1 mod 6) ou (G(t-1) = 2 e B1(t-1) = i)
+72 0 1 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 1
+
+# Pr(B2=i) = 1/6
+6 0.1666666667 0.1666666667 0.1666666667 0.1666666667 0.1666666667 0.1666666667
+
+# Pr(B2'|G,B2)
+# B2(t) = i sse ([G(t-1) = 1] e [B2(t-1) = i + 1 mod 6]) ou (G(t-1) = 2 e [B2(t-1) = i])
+72 1 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 1 1 0 0 0 0 0
+
+# Pr(S1)
+2 1 0
+
+# Pr(S1'|S1,L1,B1,G)
+96 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 0 1 0 1 0 1 0 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 1 0 1 0 1 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+# Pr(S2)
+2 1 0
+
+# Pr(S2'|S2,L2,B2,G)
+96 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 1 0 1 0 1 0 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 1 0 1 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+# Pr(D|S1,S2)
+# D(t) = Sim sse (S1(t) = Sim ou S2(t) = Sim)
+8 1 0 0 0 0 1 1 1
