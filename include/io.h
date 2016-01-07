@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <set>
 #include <memory>
 
 namespace dbn {
@@ -40,7 +41,8 @@ namespace dbn {
 
 	int read_observations(
 		const char *filename,
-		std::vector<std::unordered_map<unsigned,unsigned>> &observations
+		std::vector<std::unordered_map<unsigned,unsigned>> &observations,
+		std::set<unsigned> &state_variables
 	);
 
 }

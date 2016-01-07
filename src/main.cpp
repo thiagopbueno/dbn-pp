@@ -24,6 +24,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <set>
 #include <memory>
 
 using namespace std;
@@ -35,7 +36,16 @@ void print_model(
     vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor
 );
 
-void print_belief_states(vector<shared_ptr<Factor>> &states, vector<unordered_map<unsigned,unsigned>> &observations);
+void print_belief_states(
+    vector<shared_ptr<Factor>> &states,
+    vector<unordered_map<unsigned,unsigned>> &observations
+);
+
+void print_trajectory(
+    vector<shared_ptr<Factor>> &states,
+    vector<unordered_map<unsigned,unsigned>> &observations,
+    set<unsigned> &state_variables
+);
 
 int main(int argc, char *argv[])
 {
@@ -52,11 +62,13 @@ int main(int argc, char *argv[])
     print_model(argv[1], variables, factors, prior, transition, sensor);
 
     vector<unordered_map<unsigned,unsigned>> observations;
-    if (read_observations(argv[2], observations)) return -2;
+    set<unsigned> state_variables;
+    if (read_observations(argv[2], observations, state_variables)) return -2;
 
     cout << ">> FILTERING: " << argv[2] << endl;
     vector<shared_ptr<Factor>> states = filtering(factors, prior, transition, sensor, observations);
     print_belief_states(states, observations);
+    print_trajectory(states, observations, state_variables);
 
     return 0;
 }
@@ -102,39 +114,14 @@ void print_model(
     cout << " }" << endl << endl;
 }
 
-void print_belief_states(vector<shared_ptr<Factor>> &states, vector<unordered_map<unsigned,unsigned>> &observations) {
-    cout << "=== Trajectory ===" << endl;
-
-    const Domain &domain = states[0]->domain();
-    for (unsigned i = 0; i < domain.width(); ++i) {
-        cout << domain[i]->id() << " ";
-    }
-    cout << endl;
-
-    std::vector<unsigned> instantiation(domain.width(), 0);
-    for (unsigned i = 0; i < domain.size(); ++i) {
-
-        unsigned pos = domain.position_instantiation(instantiation);
-
-        // print instantiation
-        for (auto d : instantiation) {
-            cout << d << " ";
-        }
-        cout << ":";
-
-        // print value trajectory
-        for (auto const& pf : states) {
-            cout << " " << setprecision(3) << (*pf)[pos];
-        }
-        cout << endl;
-
-        // update instantiation
-        domain.next_instantiation(instantiation);
-    }
-    cout << endl;
+void print_belief_states(
+    vector<shared_ptr<Factor>> &states,
+    vector<unordered_map<unsigned,unsigned>> &observations) {
 
     cout << "=== Belief state factors ===" << endl;
     unsigned t = 1;
+    cout.precision(3);
+    cout << fixed;
     for (auto const& pf : states) {
         cout << "@ t = " << t << endl;
         cout << "observations: {";
@@ -147,4 +134,58 @@ void print_belief_states(vector<shared_ptr<Factor>> &states, vector<unordered_ma
         cout << *pf << endl << endl;
         ++t;
     }
+}
+
+void print_trajectory(
+    vector<shared_ptr<Factor>> &states,
+    vector<unordered_map<unsigned,unsigned>> &observations,
+    set<unsigned> &state_variables) {
+
+    // project factors over state variables
+    const Domain &domain = states[0]->domain();
+    vector<const Variable*> ordering;
+    for (unsigned i = 0; i < domain.width(); ++i) {
+        const Variable *v = domain[i];
+        if (state_variables.find(v->id()) == state_variables.end()) {
+            ordering.push_back(v);
+        }
+    }
+    vector<shared_ptr<Factor>> factors;
+    for (unsigned i = 0; i < states.size(); ++i) {
+        factors.clear();
+        factors.push_back(states[i]);
+        states[i] = variable_elimination(ordering, factors);
+    }
+
+    cout << "=== Trajectory ===" << endl;
+    const Domain &new_domain = states[0]->domain();
+    for (unsigned i = 0; i < new_domain.width(); ++i) {
+        cout << new_domain[i]->id() << " ";
+    }
+    cout << endl;
+
+    cout.precision(3);
+    cout << fixed;
+
+    std::vector<unsigned> instantiation(new_domain.width(), 0);
+    for (unsigned i = 0; i < new_domain.size(); ++i) {
+
+        unsigned pos = new_domain.position_instantiation(instantiation);
+
+        // print instantiation
+        for (auto d : instantiation) {
+            cout << d << " ";
+        }
+        cout << ":";
+
+        // print value trajectory
+        for (auto const& pf : states) {
+            cout << " " << (*pf)[pos];
+        }
+        cout << endl;
+
+        // update instantiation
+        new_domain.next_instantiation(instantiation);
+    }
+    cout << endl;
 }

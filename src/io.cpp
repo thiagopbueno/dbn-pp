@@ -23,6 +23,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <set>
 #include <unordered_map>
 #include <memory>
 
@@ -159,14 +160,15 @@ namespace dbn {
 
     int read_observations(
         const char *filename,
-        vector<unordered_map<unsigned,unsigned>> &observations) {
+        vector<unordered_map<unsigned,unsigned>> &observations,
+        set<unsigned> &state_variables) {
 
         ifstream input_file(filename);
         if (input_file.is_open()) {
             unsigned length, width;
 
-            read_next_integer(input_file, length);
             read_next_integer(input_file, width);
+            read_next_integer(input_file, length);
 
             for (unsigned t = 0; t < length; ++t) {
                 observations.emplace_back();
@@ -180,6 +182,14 @@ namespace dbn {
                     read_next_integer(input_file, evidence);
                     observations[t][id] = evidence;
                 }
+            }
+
+            unsigned state_width;
+            read_next_integer(input_file, state_width);
+            for (unsigned i = 0; i < state_width; ++i) {
+                unsigned id;
+                read_next_integer(input_file, id);
+                state_variables.insert(id);
             }
 
             input_file.close();
