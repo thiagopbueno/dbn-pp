@@ -16,7 +16,7 @@ bin/main.o: src/main.cpp
 	$(CC) $(CCFLAGS) -I include/ -O2 -c -o $@ $<
 
 debug: clean dbn-debug
-	valgrind --leak-check=full --dsymutil=yes --suppressions=dbn.supp ./dbn-debug data/models/enough-sleep.duai data/models/enough-sleep.evidence
+	valgrind --leak-check=full ./dbn-debug data/models/enough-sleep.duai data/models/enough-sleep.evidence
 
 dbn-debug: $(OBJDEBUG)
 	$(CC) -o $@ $^

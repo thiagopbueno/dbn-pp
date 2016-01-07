@@ -2,7 +2,7 @@
 .DS_Store
 
 dbn-debug
-dbn.dSYM/
+dbn-debug.dSYM/
 *.supp
 
 # Compiled Object files
