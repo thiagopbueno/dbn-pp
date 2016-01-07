@@ -29,4 +29,4 @@ debug/main.o: src/main.cpp
 
 .PHONY: clean
 clean:
-	rm -rfv dbn bin/*.o dbn-debug.dSYM/ debug/*.o
+	rm -rfv dbn bin/*.o dbn-debug dbn-debug.dSYM/ debug/*.o
