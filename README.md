@@ -17,16 +17,20 @@ $ ./dbn /path/to/model.duai /path/to/observations.evidence
 ```
 ## Input
 
-### uai extended model for finete-state DBNs
+### uai extended specification for finite-state DBNs
 
 The extended uai model for DBNs is inspired by the specification of the [UAI 2014 Inference Competition](http://www.hlt.utdallas.edu/~vgogate/uai14-competition/). The .duai model specification extends the [.uai model format](http://www.hlt.utdallas.edu/~vgogate/uai14-competition/modelformat.html) and the .duai.evid extends the [.uai.evid evidence format](http://www.hlt.utdallas.edu/~vgogate/uai14-competition/evidformat.html).
 
 **Please note these are formats proposed by me for testing-only purposes and are still in development.**
 
+#### File .duai model specification
+
 The syntax for the .duai model is the following:
 
 ```
 # model file with extension .duai
+
+DBAYES
 
 <N> [list of variable sizes]
 
@@ -48,7 +52,7 @@ The syntax for the .duai model is the following:
 
 ```
 
-where the constants:
+where the constants are such that:
 
 * N is the total number of variables
 * P is the total number of variables in the prior model
@@ -56,8 +60,13 @@ where the constants:
 * S is the total numver of variables in the sensor model
 
 Please note that N = T + S and P <= N.
-The widht of a factor refers to the cardinality of its scope/domain and its size is the number of possible instantiations of its scope/domain variables.
+The width of a factor refers to the cardinality of its scope/domain and its size is the number of possible instantiations of its scope/domain variables.
 
+Comments are allowed anywhere and start with '#' sign and go until the end of the line.
+
+#### File .duai.evid evidence specification
+
+The syntax for the .duai.evid evidence format is the following:
 
 ```
 # filtering file with extension .duai.evid
@@ -69,10 +78,22 @@ The widht of a factor refers to the cardinality of its scope/domain and its size
 <SV> [list of state variables to display filtering trajectory]
 ```
 
+where the constants are such that:
+
+* E is the total number of evidence variables
+* H is the horizon size (number of timesteps) for filtering
+* SV is the total number of state variables of interest (if this is less than T/2, variable elimination is performed)
+
+Comments are allowed anywhere and start with '#' sign and go until the end of the line.
+
 ### Example
+
+The following example Enough Sleep Student Problem is extracted from exercices 15.13 and 15.14 of the textbook Artificial Intelligence: A Modern Approach - 3rd Edition, by Stuart Russel, Peter Norvig.
 
 ```
 # data/models/enough-sleep.duai
+
+DBAYES
 
 # Variables
 4
@@ -113,7 +134,7 @@ The widht of a factor refers to the cardinality of its scope/domain and its size
 ```
 
 ```
-$ ./dbn data/models/enough-sleep.duai data/models/enough-sleep.evidence
+$ ./dbn data/models/enough-sleep.duai data/models/enough-sleep.duai.evid
 
 >> MODEL: data/models/enough-sleep.duai
 === Variables ===
