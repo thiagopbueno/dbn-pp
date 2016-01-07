@@ -2,13 +2,15 @@
 
 Data structures and algorithms in C++ for **probabilistic modeling and inference** in finite-state Dynamic Bayesian Networks (DBNs).
 
-Current supported inference algorithms:
+Currently supported inference routines:
 
 * Bucket elimination
-* Filtering
+* Forward algorithm (filtering)
 
-Inputs are accepted in the format .duai (uai extended model for dynamic nets).
-See below for more details.
+The overall structure used for variable, factor and domain representation is highly inspired by the [kpu-pp project](https://github.com/denismaua/kpu-pp).
+
+Inputs are accepted in the format .duai (uai extended model for dynamic nets). See below for more details.
+
 
 ## Usage
 
@@ -178,3 +180,12 @@ Factor(Domain{0}, size:2, partition:1, values:[0.896, 0.104])
 0 : 0.136 0.499 0.896
 1 : 0.864 0.501 0.104
 ```
+
+## LICENSE
+
+Copyright (c) 2015 Thiago Pereira Bueno
+All Rights Reserved.
+
+DBN is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+DBN is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
