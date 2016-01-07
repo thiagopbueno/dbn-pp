@@ -11,11 +11,17 @@ The overall structure used for variable, factor and domain representation is hig
 
 Inputs are accepted in the format .duai (uai extended model for dynamic nets). See below for more details.
 
+## Installation
+
+```
+$ git clone https://github.com/thiagopbueno/dbn.git
+$ mkdir bin/ debug/
+$ make clean && make
+```
 
 ## Usage
 
 ```
-$ make clean && make
 $ ./dbn /path/to/model.duai /path/to/observations.duai.evid
 ```
 ## Input
