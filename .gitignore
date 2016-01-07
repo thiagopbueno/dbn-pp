@@ -1,6 +1,7 @@
 *~
 .DS_Store
 
+dbn-debug
 dbn.dSYM/
 *.supp
 
