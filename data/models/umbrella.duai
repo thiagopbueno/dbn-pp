@@ -1,0 +1,37 @@
+# Umbrella World Problem
+#
+# HMM with transition model Pr(R(t)|R(t-1)) and sensor model Pr(U(t)|R(t))
+# extratec from Figure 15.2 of textbook Artificial Intelligence: A Modern 
+# Approach - 3rd Edition, by Stuart Russel, Peter Norvig
+#
+DBAYES
+3
+2 # id=0 name=R  domain={0,1}
+2 # id=1 name=R' domain={0,1}
+2 # id=2 name=U  domain={0,1}
+
+# Prior
+1 0
+
+# Transition
+2 0 1
+
+# Sensor
+1 2
+
+# Domains
+1 0
+2 1 0
+2 2 0
+
+# Factors
+
+# Pr(R)
+2 0.5 0.5
+
+# Pr(R'|R)
+4 0.7 0.3 0.3 0.7
+
+# Pr(U|R)
+4 0.8 0.1 0.2 0.9
+
