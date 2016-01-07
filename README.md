@@ -63,7 +63,7 @@ where the constants are such that:
 Please note that N = T + S and P <= N.
 The width of a factor refers to the cardinality of its scope/domain and its size is the number of possible instantiations of its scope/domain variables.
 
-Comments are allowed anywhere and start with '#' sign and go until the end of the line.
+Comments are allowed anywhere and start with '#' sign and go until the end of the line. Whitespaces are ignored.
 
 #### File .duai.evid evidence specification
 
@@ -85,7 +85,7 @@ where the constants are such that:
 * H is the horizon size (number of timesteps) for filtering
 * SV is the total number of state variables of interest (if this is less than T/2, variable elimination is performed)
 
-Comments are allowed anywhere and start with '#' sign and go until the end of the line.
+Comments are allowed anywhere and start with '#' sign and go until the end of the line. Whitespaces are ignored.
 
 ### Example
 
