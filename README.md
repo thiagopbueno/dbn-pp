@@ -1,19 +1,20 @@
 # DBN++
 
-Data structures and algorithms in C++ for probabilistic modeling and inference in finite-state dynamic bayesian networks.
+Data structures and algorithms in C++ for **probabilistic modeling and inference** in finite-state Dynamic Bayesian Networks (DBNs).
 
 Current supported inference algorithms:
 
 * Bucket elimination
 * Filtering
 
-Input formats accepted .duai (uai extended model for dynamic nets). See below for more details.
+Inputs are accepted in the format .duai (uai extended model for dynamic nets).
+See below for more details.
 
 ## Usage
 
 ```
 $ make clean && make
-$ ./dbn /path/to/model.duai /path/to/observations.evidence
+$ ./dbn /path/to/model.duai /path/to/observations.duai.evid
 ```
 ## Input
 
@@ -21,7 +22,7 @@ $ ./dbn /path/to/model.duai /path/to/observations.evidence
 
 The extended uai model for DBNs is inspired by the specification of the [UAI 2014 Inference Competition](http://www.hlt.utdallas.edu/~vgogate/uai14-competition/). The .duai model specification extends the [.uai model format](http://www.hlt.utdallas.edu/~vgogate/uai14-competition/modelformat.html) and the .duai.evid extends the [.uai.evid evidence format](http://www.hlt.utdallas.edu/~vgogate/uai14-competition/evidformat.html).
 
-**Please note these are formats proposed by me for testing-only purposes and are still in development.**
+*Please note these formats are proposed by me for testing-only purposes and are still in development.*
 
 #### File .duai model specification
 
@@ -69,7 +70,7 @@ Comments are allowed anywhere and start with '#' sign and go until the end of th
 The syntax for the .duai.evid evidence format is the following:
 
 ```
-# filtering file with extension .duai.evid
+# evidence file with extension .duai.evid
 <E> <H>
 <ID_VAR_1> [list of H evidence values for variable 1]
 <ID_VAR_2> [list of H evidence values for variable 2]
