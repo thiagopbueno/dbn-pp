@@ -4,7 +4,7 @@ Data structures and algorithms in C++ for **probabilistic modeling and inference
 
 Currently supported inference routines:
 
-* Bucket elimination
+* Variable elimination in unrolled network (filtering)
 * Forward algorithm (filtering)
 
 The overall structure used for variable, factor and domain representation is highly inspired by the [kpu-pp project](https://github.com/denismaua/kpu-pp).
