@@ -74,7 +74,7 @@ namespace dbn {
     ostream &operator<<(ostream &o, const Factor &f) {
         o << "Factor(" << *(f._domain);
         o << ", size:" << f.size();
-        o << ", partition:" << (unsigned)f._partition;
+        o << ", partition:" << f._partition;
         o << ", values:[";
         o.precision(3);
         o << fixed;
