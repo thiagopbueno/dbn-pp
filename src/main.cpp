@@ -58,14 +58,15 @@ int main(int argc, char *argv[])
 
     if (read_uai_model(argv[1], order, variables, factors, prior, transition, sensor)) return -1;
     cout << ">> MODEL: " << argv[1] << endl;
-    print_model(argv[1], variables, factors, prior, transition, sensor);
+    // print_model(argv[1], variables, factors, prior, transition, sensor);
 
     vector<unordered_map<unsigned,unsigned>> observations;
     set<unsigned> state_variables;
     if (read_observations(argv[2], observations, state_variables)) return -2;
 
     cout << ">> FILTERING: " << argv[2] << endl;
-    vector<shared_ptr<Factor>> states = filtering(factors, prior, transition, sensor, observations);
+    vector<shared_ptr<Factor>> states = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
+    // vector<shared_ptr<Factor>> states = filtering(factors, prior, transition, sensor, observations);
     print_observations(observations);
     print_trajectory(states, observations, state_variables);
 

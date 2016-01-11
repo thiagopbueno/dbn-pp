@@ -20,6 +20,7 @@
 #include "operations.h"
 
 #include <forward_list>
+#include <iostream>
 
 using namespace std;
 
@@ -106,7 +107,7 @@ namespace dbn {
 		projection->change_variables(transition);
 		sum_prod_factors.pop_back();
 
-		return std::move(projection);
+		return move(projection);
 	}
 
 	unique_ptr<Factor> update(
@@ -121,12 +122,12 @@ namespace dbn {
 		unique_ptr<Factor> belief_state = unique_ptr<Factor>(product(*evidence_t, projection));
 		belief_state = unique_ptr<Factor>(normalization(*belief_state));
 
-		return std::move(belief_state);
+		return move(belief_state);
 	}
 
 	vector<shared_ptr<Factor>> filtering(
 		vector<shared_ptr<Factor>> &factors,
-		std::vector<unsigned> &prior,
+		vector<unsigned> &prior,
 		unordered_map<unsigned,const Variable*> &transition,
 		vector<unsigned> &sensor,
 		vector<unordered_map<unsigned,unsigned>> &observations) {
@@ -160,6 +161,130 @@ namespace dbn {
 
 			// add new estimate to filtering list
 			estimates.push_back(forward);
+		}
+
+		return estimates;
+	}
+
+
+	vector<shared_ptr<Factor>> unrolled_filtering(
+		vector<unique_ptr<Variable>> &variables,
+		vector<shared_ptr<Factor>> &factors,
+		vector<unsigned> &prior,
+		unordered_map<unsigned,const Variable*> &transition,
+		vector<unsigned> &sensor,
+		vector<unordered_map<unsigned,unsigned>> &observations) {
+
+		vector<shared_ptr<Factor>> estimates;
+
+		vector<const Variable*> ordering;
+
+		unordered_map<unsigned,const Variable *> renaming;
+		for (auto it_transition : transition) {
+			const Variable *next_var = variables[it_transition.first].get();
+			unsigned curr_id = it_transition.second->id();
+			renaming[curr_id] = next_var;
+		}
+
+		vector<shared_ptr<Factor>> unrolled_factors;
+
+		for (auto prior_id : prior) {
+			unrolled_factors.push_back(factors[prior_id]);
+			// ordering.push_back(variables[prior_id].get());
+		}
+
+		for (auto it_transition : transition) {
+			unsigned id_next = it_transition.first;
+			unrolled_factors.push_back(factors[id_next]);
+
+			unsigned id_curr = it_transition.second->id();
+			ordering.push_back(variables[id_curr].get());
+		}
+
+		for (auto sensor_id : sensor) {
+			factors[sensor_id]->change_variables(renaming);
+
+			unique_ptr<Factor> new_factor = unique_ptr<Factor>(conditioning(*factors[sensor_id], observations[0]));
+			new_factor = unique_ptr<Factor>(normalization(*new_factor));
+
+			unrolled_factors.push_back(move(new_factor));
+		}
+
+
+		// cout << "Renaming" << endl;
+		// for (auto it : renaming) {
+		// 	cout << it.first << ":" << it.second->id() << endl;
+		// }
+		// cout << "Unrolled factors:" << endl;
+		// for (auto const& f : unrolled_factors) {
+		// 	cout << *f << endl;
+		// }
+
+		cout << "Estimates[0]" << endl;
+		estimates.emplace_back(normalization(*variable_elimination(ordering, unrolled_factors)));
+		cout << *estimates[0] << endl << endl;
+
+		unsigned id = factors.size();
+		for (unsigned t = 1; t < observations.size(); ++t) {
+
+			for (auto it_transition : transition) {
+				unsigned id_next = it_transition.first;
+				unsigned id_curr = it_transition.second->id();
+
+				unique_ptr<Variable> new_var = unique_ptr<Variable>(new Variable(id, variables[id_next]->size()));
+				renaming[id_next] = new_var.get();
+				variables.push_back(move(new_var));
+				id++;
+
+				Factor *new_factor = new Factor(*factors[id_next]);
+				new_factor->change_variables(renaming);
+
+				unrolled_factors.emplace_back(new_factor);
+				ordering.push_back(renaming[id_curr]);
+				renaming[id_curr] = renaming[id_next];
+			}
+
+			// for (auto it_renaming : renaming) {
+			// 	unsigned i = it_renaming.first;
+			// 	if (i < factors.size()) {
+			// 		unsigned next_id = renaming[i]->id();
+			// 		if (renaming.find(next_id) != renaming.end()) {
+			// 			renaming[i] = renaming[next_id];
+			// 		}
+			// 	}
+			// }
+
+			for (auto sensor_id : sensor) {
+				unique_ptr<Variable> new_var = unique_ptr<Variable>(new Variable(id, variables[sensor_id]->size()));
+				renaming[sensor_id] = new_var.get();
+				variables.push_back(move(new_var));
+				id++;
+
+				unique_ptr<Factor> new_factor = unique_ptr<Factor>(conditioning(*factors[sensor_id], observations[t]));
+				new_factor = unique_ptr<Factor>(normalization(*new_factor));
+				new_factor->change_variables(renaming);
+
+				unrolled_factors.push_back(move(new_factor));
+			}
+
+			// cout << "Renaming" << endl;
+			// for (auto it : renaming) {
+			// 	cout << it.first << ":" << it.second->id() << endl;
+			// }
+
+			// cout << "Unrolled factors:" << endl;
+			// for (auto const& f : unrolled_factors) {
+			// 	cout << *f << endl;
+			// }
+
+			// cout << "Ordering" << endl;
+			// for (auto pv : ordering) {
+			// 	cout << pv->id() << endl;
+			// }
+
+			cout << "Estimates[" << t << "]" << endl;
+			estimates.emplace_back(normalization(*variable_elimination(ordering, unrolled_factors)));
+			cout << *estimates[t] << endl << endl;
 		}
 
 		return estimates;
