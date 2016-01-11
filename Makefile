@@ -6,6 +6,9 @@ OBJDEBUG=debug/variable.o debug/domain.o debug/factor.o debug/io.o debug/operati
 
 all: dbn
 
+install: clean
+	mkdir bin/ debug/
+
 dbn: $(OBJ)
 	$(CC) -o $@ $^
 
@@ -16,7 +19,7 @@ bin/main.o: src/main.cpp
 	$(CC) $(CCFLAGS) -I include/ -O2 -c -o $@ $<
 
 debug: clean dbn-debug
-	valgrind --leak-check=full ./dbn-debug data/models/enough-sleep.duai data/models/enough-sleep.evidence
+	valgrind --leak-check=full ./dbn-debug data/models/enough-sleep.duai data/models/enough-sleep.duai.evid
 
 dbn-debug: $(OBJDEBUG)
 	$(CC) -o $@ $^

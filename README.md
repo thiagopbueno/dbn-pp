@@ -15,8 +15,8 @@ Inputs are accepted in the format .duai (uai extended model for dynamic nets). S
 
 ```
 $ git clone https://github.com/thiagopbueno/dbn.git
-$ mkdir bin/ debug/
-$ make clean && make
+$ make install
+$ make
 ```
 
 ## Usage
