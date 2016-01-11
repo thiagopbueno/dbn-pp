@@ -60,8 +60,7 @@ namespace dbn {
 				forward_list<shared_ptr<Factor>>::const_iterator pf = bucket.begin();
 
 				while (b > 1) {
-					unique_ptr<Factor> p(product(*prod, **pf));
-					prod = move(p);
+					prod = unique_ptr<Factor>(product(*prod, **pf));
 					pf++;
 					b--;
 				}
@@ -82,6 +81,47 @@ namespace dbn {
 		}
 
 		return prod;
+	}
+
+	unique_ptr<Factor> project(
+		vector<shared_ptr<Factor>> &factors,
+		const unordered_map<unsigned,const Variable*> &transition,
+		const shared_ptr<Factor> &forward) {
+
+		static vector<const Variable*> ordering;
+		static vector<shared_ptr<Factor>> sum_prod_factors;
+
+		if (ordering.size() == 0 && sum_prod_factors.size() == 0) {
+			for (auto it_transition : transition) {
+				unsigned id_prime = it_transition.first;
+				const Variable *variable = it_transition.second;
+				ordering.push_back(variable);
+				sum_prod_factors.push_back(factors[id_prime]);
+			}
+		}
+
+		// variable elimination
+		sum_prod_factors.push_back(forward);
+		unique_ptr<Factor> projection = variable_elimination(ordering, sum_prod_factors);
+		projection->change_variables(transition);
+		sum_prod_factors.pop_back();
+
+		return std::move(projection);
+	}
+
+	unique_ptr<Factor> update(
+		const Factor &projection,
+		const Factor &sensor_model,
+		const unordered_map<unsigned,unsigned> &evidence) {
+
+		// add observation from time t
+		unique_ptr<Factor> evidence_t = unique_ptr<Factor>(conditioning(sensor_model, evidence));
+
+		// update projection with observation
+		unique_ptr<Factor> belief_state = unique_ptr<Factor>(product(*evidence_t, projection));
+		belief_state = unique_ptr<Factor>(normalization(*belief_state));
+
+		return std::move(belief_state);
 	}
 
 	vector<shared_ptr<Factor>> filtering(
@@ -110,40 +150,16 @@ namespace dbn {
 		shared_ptr<Factor> forward = make_shared<Factor>(1.0);
 		forward = unique_ptr<Factor>(product(*forward, *prior_model));
 
-		// variable elimination
-		vector<const Variable*> ordering;
-		vector<shared_ptr<Factor>> sum_prod_factors;
-		for (auto it_transition : transition) {
-			unsigned id_prime = it_transition.first;
-			const Variable *variable = it_transition.second;
-			ordering.push_back(variable);
-			sum_prod_factors.push_back(factors[id_prime]);
-		}
-
 		for (auto evidence : observations) {
 
-			sum_prod_factors.push_back(forward);
+			// project belief state
+			unique_ptr<Factor> projection = project(factors, transition, forward);
 
-			// compute sum_product factors
-			unique_ptr<Factor> sum_prod = variable_elimination(ordering, sum_prod_factors);
-			sum_prod->change_variables(transition);
-
-			// add observation from time t
-			unique_ptr<Factor> evidence_t = unique_ptr<Factor>(conditioning(*sensor_model, evidence));
-
-			// unique_ptr<Factor> evidence_t = unique_ptr<Factor>(new Factor(1.0));
-			// for (auto sensor_id : sensor) {
-			// 	unique_ptr<Factor> sensor_factor = unique_ptr<Factor>(conditioning(*factors[sensor_id], evidence));
-			// 	evidence_t = unique_ptr<Factor>(product(*evidence_t, *sensor_factor));
-			// }
-
-			forward = unique_ptr<Factor>(product(*evidence_t, *sum_prod));
-			forward = unique_ptr<Factor>(normalization(*forward));
+			// update belief state
+			forward = update(*projection, *sensor_model, evidence);
 
 			// add new estimate to filtering list
 			estimates.push_back(forward);
-
-			sum_prod_factors.pop_back();
 		}
 
 		return estimates;
