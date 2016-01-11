@@ -1,6 +1,6 @@
 # DBN++
 
-Data structures and algorithms in C++ for **probabilistic modeling and inference** in finite-state Dynamic Bayesian Networks (DBNs).
+Data structures and algorithms in C++ for **probabilistic modeling and inference** in (discrete-time) finite-state Dynamic Bayesian Networks (DBNs).
 
 Currently supported inference routines:
 
