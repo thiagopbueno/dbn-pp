@@ -122,4 +122,4 @@ DBAYES
 
 # Pr(D|S1,S2)
 # D(t) = Sim sse (S1(t) = Sim ou S2(t) = Sim)
-8 1 0.5 0 0 0 0.5 1 1
+8 1 0 0.1 0 0 1 0.9 1
