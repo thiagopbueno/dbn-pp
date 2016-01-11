@@ -220,9 +220,24 @@ namespace dbn {
 		// 	cout << *f << endl;
 		// }
 
-		cout << "Estimates[0]" << endl;
-		estimates.emplace_back(normalization(*variable_elimination(ordering, unrolled_factors)));
-		cout << *estimates[0] << endl << endl;
+		Factor *estimate = normalization(*variable_elimination(ordering, unrolled_factors));
+		unordered_map<unsigned,const Variable *> renaming_back;
+		const Domain &estimate_domain = estimate->domain();
+		for (unsigned i = 0; i < estimate_domain.width(); ++i) {
+			unsigned var_id = estimate_domain[i]->id();
+			for (auto it_renaming : renaming) {
+				unsigned id_from = it_renaming.first;
+				unsigned id_to = it_renaming.second->id();
+				if (id_to == var_id) {
+					renaming_back[var_id] = variables[id_from].get();
+				}
+			}
+		}
+		estimate->change_variables(renaming_back);
+		estimates.emplace_back(estimate);
+
+		// cout << "Estimates[0]" << endl;
+		// cout << *estimates[0] << endl << endl;
 
 		unsigned id = factors.size();
 		for (unsigned t = 1; t < observations.size(); ++t) {
@@ -282,9 +297,24 @@ namespace dbn {
 			// 	cout << pv->id() << endl;
 			// }
 
-			cout << "Estimates[" << t << "]" << endl;
-			estimates.emplace_back(normalization(*variable_elimination(ordering, unrolled_factors)));
-			cout << *estimates[t] << endl << endl;
+			Factor *estimate = normalization(*variable_elimination(ordering, unrolled_factors));
+			unordered_map<unsigned,const Variable *> renaming_back;
+			const Domain &estimate_domain = estimate->domain();
+			for (unsigned i = 0; i < estimate_domain.width(); ++i) {
+				unsigned var_id = estimate_domain[i]->id();
+				for (auto it_renaming : renaming) {
+					unsigned id_from = it_renaming.first;
+					unsigned id_to = it_renaming.second->id();
+					if (id_to == var_id) {
+						renaming_back[var_id] = variables[id_from].get();
+					}
+				}
+			}
+			estimate->change_variables(renaming_back);
+			estimates.emplace_back(estimate);
+
+			// cout << "Estimates[" << t << "]" << endl;
+			// cout << *estimates[t] << endl << endl;
 		}
 
 		return estimates;
