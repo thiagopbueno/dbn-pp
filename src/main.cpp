@@ -65,10 +65,15 @@ int main(int argc, char *argv[])
     if (read_observations(argv[2], observations, state_variables)) return -2;
 
     cout << ">> FILTERING: " << argv[2] << endl;
-    vector<shared_ptr<Factor>> states = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
-    // vector<shared_ptr<Factor>> states = filtering(factors, prior, transition, sensor, observations);
     print_observations(observations);
+
+    cout << "Forward filtering:" << endl;
+    vector<shared_ptr<Factor>> states = filtering(factors, prior, transition, sensor, observations);
     print_trajectory(states, observations, state_variables);
+
+    cout << "Unrolled filtering:" << endl;
+    vector<shared_ptr<Factor>> states2 = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
+    print_trajectory(states2, observations, state_variables);
 
     return 0;
 }
