@@ -36,8 +36,7 @@ void print_model(
     vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor
 );
 
-void print_belief_states(
-    vector<shared_ptr<Factor>> &states,
+void print_observations(
     vector<unordered_map<unsigned,unsigned>> &observations
 );
 
@@ -67,7 +66,7 @@ int main(int argc, char *argv[])
 
     cout << ">> FILTERING: " << argv[2] << endl;
     vector<shared_ptr<Factor>> states = filtering(factors, prior, transition, sensor, observations);
-    print_belief_states(states, observations);
+    print_observations(observations);
     print_trajectory(states, observations, state_variables);
 
     return 0;
@@ -114,26 +113,22 @@ void print_model(
     cout << " }" << endl << endl;
 }
 
-void print_belief_states(
-    vector<shared_ptr<Factor>> &states,
+void print_observations(
     vector<unordered_map<unsigned,unsigned>> &observations) {
-
-    cout << "=== Belief state factors ===" << endl;
-    unsigned t = 1;
+    cout << "=== Observations ===" << endl;
     cout.precision(3);
     cout << fixed;
-    for (auto const& pf : states) {
-        cout << "@ t = " << t << endl;
-        cout << "observations: {";
+    unsigned T = observations.size();
+    for (unsigned t = 1; t <= T; ++t) {
+        cout << "@t = " << t << " {";
         for (auto it_evidence : observations[t-1]) {
             unsigned id = it_evidence.first;
             unsigned value = it_evidence.second;
             cout << " " << id << ":" << value;
         }
         cout << " }" << endl;
-        cout << *pf << endl << endl;
-        ++t;
     }
+    cout << endl;
 }
 
 void print_trajectory(

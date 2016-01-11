@@ -167,19 +167,11 @@ Variables { 1->0 }
 === Sensor model ===
 Variables { 2 3 }
 
->> FILTERING: data/models/enough-sleep.evidence
-=== Belief state factors ===
-@ t = 1
-observations: { 3:0 2:0 }
-Factor(Domain{0}, size:2, partition:1, values:[0.136, 0.864])
-
-@ t = 2
-observations: { 3:0 2:1 }
-Factor(Domain{0}, size:2, partition:1, values:[0.499, 0.501])
-
-@ t = 3
-observations: { 3:1 2:1 }
-Factor(Domain{0}, size:2, partition:1, values:[0.896, 0.104])
+>> FILTERING: data/models/enough-sleep.duai.evid
+=== Observations ===
+@t = 1 { 3:0 2:0 }
+@t = 2 { 3:0 2:1 }
+@t = 3 { 3:1 2:1 }
 
 === Trajectory ===
 0
