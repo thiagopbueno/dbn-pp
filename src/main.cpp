@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
     if (read_uai_model(argv[1], order, variables, factors, prior, transition, sensor)) return -1;
     cout << ">> MODEL: " << argv[1] << endl;
-    // print_model(argv[1], variables, factors, prior, transition, sensor);
+    print_model(argv[1], variables, factors, prior, transition, sensor);
 
     vector<unordered_map<unsigned,unsigned>> observations;
     set<unsigned> state_variables;
@@ -102,7 +102,7 @@ void print_model(
     }
     cout << " }" << endl << endl;
 
-    cout << "=== Transition model ===" << endl;
+    cout << "=== 2TBN ===" << endl;
     cout << "Variables {";
     for (auto it : transition) {
         unsigned id_next = it.first;
