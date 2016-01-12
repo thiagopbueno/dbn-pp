@@ -20,12 +20,16 @@
 #include "operations.h"
 #include "inference.h"
 
+#include "stdio.h"
 #include <iomanip>
 #include <iostream>
 #include <vector>
 #include <unordered_map>
 #include <set>
 #include <memory>
+
+#include "cuddObj.hh"
+// #include "cudd.h"
 
 using namespace std;
 using namespace dbn;
@@ -39,6 +43,25 @@ void print_observations(vector<unordered_map<unsigned,unsigned>> &observations);
 
 void print_trajectory(vector<shared_ptr<Factor>> &states, set<unsigned> &state_variables);
 
+void print_test_add()
+{
+    Cudd mgr(2,0);
+    ADD p = mgr.addVar(0);
+    ADD q = mgr.addVar(1);
+
+    // Test arithmetic operators.
+    ADD r = p + q;
+    cout << "r"; r.print(2,2);
+
+    FILE *f = fopen("add_test.dot", "w");
+    const char *inputNames[2]{"p", "q"};
+    const char *outputNames[1]{"r"};
+    DdNode *outputs[1];
+    outputs[0] = r.getNode();
+    Cudd_DumpDot(mgr.getManager(), 1, outputs, inputNames, outputNames, f);
+    fclose(f);
+}
+
 int main(int argc, char *argv[])
 {
     unsigned order;
@@ -48,6 +71,8 @@ int main(int argc, char *argv[])
     vector<unsigned> prior;
     unordered_map<unsigned,const Variable*> transition;
     vector<unsigned> sensor;
+
+    print_test_add();
 
     if (read_uai_model(argv[1], order, variables, factors, prior, transition, sensor)) return -1;
     cout << ">> MODEL: " << argv[1] << endl;

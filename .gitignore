@@ -3,6 +3,7 @@
 
 dbn-debug
 dbn-debug.dSYM/
+dbn.dSYM/
 *.supp
 
 # Compiled Object files
