@@ -31,20 +31,13 @@ using namespace std;
 using namespace dbn;
 
 void print_model(
-    char *filename,
     vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors,
     vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor
 );
 
-void print_observations(
-    vector<unordered_map<unsigned,unsigned>> &observations
-);
+void print_observations(vector<unordered_map<unsigned,unsigned>> &observations);
 
-void print_trajectory(
-    vector<shared_ptr<Factor>> &states,
-    vector<unordered_map<unsigned,unsigned>> &observations,
-    set<unsigned> &state_variables
-);
+void print_trajectory(vector<shared_ptr<Factor>> &states, set<unsigned> &state_variables);
 
 int main(int argc, char *argv[])
 {
@@ -58,7 +51,7 @@ int main(int argc, char *argv[])
 
     if (read_uai_model(argv[1], order, variables, factors, prior, transition, sensor)) return -1;
     cout << ">> MODEL: " << argv[1] << endl;
-    print_model(argv[1], variables, factors, prior, transition, sensor);
+    print_model(variables, factors, prior, transition, sensor);
 
     vector<unordered_map<unsigned,unsigned>> observations;
     set<unsigned> state_variables;
@@ -69,17 +62,16 @@ int main(int argc, char *argv[])
 
     cout << "Forward filtering:" << endl;
     vector<shared_ptr<Factor>> states = filtering(factors, prior, transition, sensor, observations);
-    print_trajectory(states, observations, state_variables);
+    print_trajectory(states, state_variables);
 
     cout << "Unrolled filtering:" << endl;
     vector<shared_ptr<Factor>> states2 = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
-    print_trajectory(states2, observations, state_variables);
+    print_trajectory(states2, state_variables);
 
     return 0;
 }
 
 void print_model(
-    char *filename,
     vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors,
     vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor) {
 
@@ -119,8 +111,7 @@ void print_model(
     cout << " }" << endl << endl;
 }
 
-void print_observations(
-    vector<unordered_map<unsigned,unsigned>> &observations) {
+void print_observations(vector<unordered_map<unsigned,unsigned>> &observations) {
     cout << "=== Observations ===" << endl;
     cout.precision(3);
     cout << fixed;
@@ -137,10 +128,7 @@ void print_observations(
     cout << endl;
 }
 
-void print_trajectory(
-    vector<shared_ptr<Factor>> &states,
-    vector<unordered_map<unsigned,unsigned>> &observations,
-    set<unsigned> &state_variables) {
+void print_trajectory(vector<shared_ptr<Factor>> &states, set<unsigned> &state_variables) {
 
     // project factors over state variables
     const Domain &domain = states[0]->domain();
