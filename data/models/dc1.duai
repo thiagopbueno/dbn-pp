@@ -1,0 +1,57 @@
+DBAYES
+
+# Variables
+8
+2 # id=0   name=W1   domain={0,1}
+2 # id=1   name=W2   domain={0,1}
+2 # id=2   name=W3   domain={0,1}
+2 # id=3   name=W4   domain={0,1}
+2 # id=4   name=HN   domain={0,1}
+2 # id=5   name=HN'  domain={0,1}
+2 # id=6   name=HA   domain={0,1}
+2 # id=7   name=HA'  domain={0,1}
+
+# Prior
+2 4 6
+
+# Transition
+4 4 5 6 7
+
+# Sensor
+3 0 1 3
+
+# Domains
+1 0
+1 1
+3 2 0 4
+4 3 1 2 6
+1 4
+2 5 4
+1 6
+2 7 6
+
+# Factors
+
+# P(W1)
+2 0.5 0.5
+
+# P(W2)
+2 0.5 0.5
+
+# P(W3|W1,HN)
+8 0.5 0 0.5 1 0.5 1 0.5 0
+
+# P(W4|W2,W3,HA)
+16 0.5 1 0.5 1 0.5 1 0.5 0 0.5 0 0.5 0 0.5 0 0.5 1
+
+# P(HN)
+2 0.5 0.5
+
+# P(HN'|HN)
+4 0.9 0.3 0.1 0.7
+
+# P(HA)
+2 0.5 0.5
+
+# P(HA'|HA)
+4 1 0.1 0 0.9
