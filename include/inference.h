@@ -46,7 +46,8 @@ namespace dbn {
 		std::vector<unsigned> &prior,
 		std::unordered_map<unsigned,const Variable*> &transition,
 		std::vector<unsigned> &sensor,
-		std::vector<std::unordered_map<unsigned,unsigned>> &observations
+		std::vector<std::unordered_map<unsigned,unsigned>> &observations,
+		bool verbose = false
 	);
 }
 

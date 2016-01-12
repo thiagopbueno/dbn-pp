@@ -173,7 +173,8 @@ namespace dbn {
 		vector<unsigned> &prior,
 		unordered_map<unsigned,const Variable*> &transition,
 		vector<unsigned> &sensor,
-		vector<unordered_map<unsigned,unsigned>> &observations) {
+		vector<unordered_map<unsigned,unsigned>> &observations,
+		bool verbose) {
 
 		vector<shared_ptr<Factor>> estimates;
 
@@ -210,15 +211,22 @@ namespace dbn {
 			unrolled_factors.push_back(move(new_factor));
 		}
 
-
-		// cout << "Renaming" << endl;
-		// for (auto it : renaming) {
-		// 	cout << it.first << ":" << it.second->id() << endl;
-		// }
-		// cout << "Unrolled factors:" << endl;
-		// for (auto const& f : unrolled_factors) {
-		// 	cout << *f << endl;
-		// }
+		if (verbose) {
+			cout << "@ t = 1" << endl;
+			cout << "Renaming" << endl;
+			for (auto it : renaming) {
+				cout << it.first << ":" << it.second->id() << endl;
+			}
+			cout << "Unrolled factors:" << endl;
+			for (auto const& f : unrolled_factors) {
+				cout << f->domain() << endl;
+			}
+			cout << "Ordering" << endl;
+			for (auto pv : ordering) {
+				cout << pv->id() << " ";
+			}
+			cout << endl;
+		}
 
 		Factor *estimate = normalization(*variable_elimination(ordering, unrolled_factors));
 		unordered_map<unsigned,const Variable *> renaming_back;
@@ -236,11 +244,16 @@ namespace dbn {
 		estimate->change_variables(renaming_back);
 		estimates.emplace_back(estimate);
 
-		// cout << "Estimates[0]" << endl;
-		// cout << *estimates[0] << endl << endl;
-
 		unsigned id = factors.size();
 		for (unsigned t = 1; t < observations.size(); ++t) {
+
+			if (verbose) {
+				cout << "@ t = " << t+1 << endl;
+				cout << "Renaming" << endl;
+				for (auto it : renaming) {
+					cout << it.first << ":" << it.second->id() << endl;
+				}
+			}
 
 			for (auto it_transition : transition) {
 				unsigned id_next = it_transition.first;
@@ -256,18 +269,14 @@ namespace dbn {
 
 				unrolled_factors.emplace_back(new_factor);
 				ordering.push_back(renaming[id_curr]);
-				renaming[id_curr] = renaming[id_next];
+				// renaming[id_curr] = renaming[id_next];
 			}
 
-			// for (auto it_renaming : renaming) {
-			// 	unsigned i = it_renaming.first;
-			// 	if (i < factors.size()) {
-			// 		unsigned next_id = renaming[i]->id();
-			// 		if (renaming.find(next_id) != renaming.end()) {
-			// 			renaming[i] = renaming[next_id];
-			// 		}
-			// 	}
-			// }
+			for (auto it_transition : transition) {
+				unsigned id_next = it_transition.first;
+				unsigned id_curr = it_transition.second->id();
+				renaming[id_curr] = renaming[id_next];
+			}
 
 			for (auto sensor_id : sensor) {
 				unique_ptr<Variable> new_var = unique_ptr<Variable>(new Variable(id, variables[sensor_id]->size()));
@@ -282,20 +291,17 @@ namespace dbn {
 				unrolled_factors.push_back(move(new_factor));
 			}
 
-			// cout << "Renaming" << endl;
-			// for (auto it : renaming) {
-			// 	cout << it.first << ":" << it.second->id() << endl;
-			// }
-
-			// cout << "Unrolled factors:" << endl;
-			// for (auto const& f : unrolled_factors) {
-			// 	cout << *f << endl;
-			// }
-
-			// cout << "Ordering" << endl;
-			// for (auto pv : ordering) {
-			// 	cout << pv->id() << endl;
-			// }
+			if (verbose) {
+				cout << "Unrolled factors:" << endl;
+				for (auto const& f : unrolled_factors) {
+					cout << f->domain() << endl;
+				}
+				cout << "Ordering" << endl;
+				for (auto pv : ordering) {
+					cout << pv->id() << " ";
+				}
+				cout << endl;
+			}
 
 			Factor *estimate = normalization(*variable_elimination(ordering, unrolled_factors));
 			unordered_map<unsigned,const Variable *> renaming_back;
@@ -312,9 +318,6 @@ namespace dbn {
 			}
 			estimate->change_variables(renaming_back);
 			estimates.emplace_back(estimate);
-
-			// cout << "Estimates[" << t << "]" << endl;
-			// cout << *estimates[t] << endl << endl;
 		}
 
 		return estimates;
