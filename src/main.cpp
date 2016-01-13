@@ -53,6 +53,8 @@ void print_test_add(vector<shared_ptr<Factor>> &factors)
         ADDFactor addf(mgr, output, *f);
         string filename = "var" + output + ".dot";
         addf.dump_dot(filename.c_str());
+        cout << filename << endl;
+        cout << addf << endl;
     }
 }
 

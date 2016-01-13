@@ -18,6 +18,7 @@
 
 #include "addfactor.h"
 #include "domain.h"
+#include "cudd.h"
 
 #include <cstdio>
 #include <iostream>
@@ -70,5 +71,24 @@ namespace dbn {
 	    return !result;
 	}
 
+
+	ostream &operator<<(ostream& os, const ADDFactor &f) {
+		os << "ADDFactor: (" << f._output << ")" << endl;
+		unsigned width = f._domain->width();
+		f._dd.print(width,3);
+		int *cube;
+		CUDD_VALUE_TYPE value;
+		DdGen *gen = Cudd_FirstCube(f._mgr.getManager(), f._dd.getNode(), &cube, &value);
+		while (!Cudd_IsGenEmpty(gen)) {
+			for (unsigned i = 0; i < width; i++) {
+				os << cube[i] << " ";
+			}
+			os << ": " << value << endl;
+			Cudd_NextCube(gen, &cube, &value);
+		}
+		Cudd_GenFree(gen);
+		os << endl;
+		return os;
+	}
 }
 

@@ -23,6 +23,8 @@
 #include "domain.h"
 #include "cuddObj.hh"
 
+#include <iostream>
+
 namespace dbn {
 
 	class ADDFactor {
@@ -31,6 +33,8 @@ namespace dbn {
 		ADDFactor(Cudd &mgr, std::string &output, Factor &factor);
 
 		int dump_dot(const char *filename);
+
+		friend std::ostream &operator<<(std::ostream& o, const ADDFactor &f);
 
 	private:
 		Cudd &_mgr;
