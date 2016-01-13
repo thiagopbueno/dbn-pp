@@ -1,3 +1,8 @@
+# Digital circuit example from Figure 1 of paper
+# Vlasselaer, J., Meert, W., Van den Broeck, G., & De Raedt, L. (2016).
+# Exploiting local and repeated structure in Dynamic Bayesian Networks.
+# Artificial Intelligence, 232, 43-53.
+
 DBAYES
 
 # Variables
