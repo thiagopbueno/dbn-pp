@@ -25,7 +25,8 @@ bin/main.o: src/main.cpp
 	$(CC) $(CCFLAGS) $(INCLUDE) -O2 -c -o $@ $<
 
 debug: dbn-debug
-	valgrind --leak-check=full --suppressions=dbn.supp ./dbn-debug data/models/enough-sleep.duai data/models/enough-sleep.duai.evid
+	valgrind --leak-check=full ./dbn-debug data/models/enough-sleep.duai data/models/enough-sleep.duai.evid
+	# valgrind --leak-check=full --suppressions=dbn.supp ./dbn-debug data/models/enough-sleep.duai data/models/enough-sleep.duai.evid
 
 dbn-debug: $(OBJDEBUG)
 	$(CC) -o $@ $^ $(LIBS)
