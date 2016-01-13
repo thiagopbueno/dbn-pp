@@ -1,6 +1,10 @@
 *~
 .DS_Store
 
+# graphviz files
+*.dot
+*.dot.ps
+
 dbn-debug
 dbn-debug.dSYM/
 dbn.dSYM/
