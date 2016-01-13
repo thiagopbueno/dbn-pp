@@ -56,8 +56,18 @@ void print_test_add(vector<shared_ptr<Factor>> &factors)
     }
 }
 
+void usage(const char *filename)
+{
+    cout << "Usage: " << filename << " /path/to/model.duai /path/to/observations.duai.evid" << endl;
+}
+
 int main(int argc, char *argv[])
 {
+    if (argc < 3) {
+        usage(argv[0]);
+        return -1;
+    }
+
     unsigned order;
     vector<unique_ptr<Variable>> variables;
     vector<shared_ptr<Factor>> factors;
