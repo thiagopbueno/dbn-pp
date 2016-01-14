@@ -130,11 +130,22 @@ namespace dbn {
         }
     }
 
+    void read_addfactors(vector<shared_ptr<Factor>> &factors, vector<shared_ptr<ADDFactor>> &addfactors) {
+        for (auto &f : factors) {
+            const Domain &domain = f->domain();
+            unsigned id = domain[(unsigned)0]->id();
+            string output = to_string(id);
+            ADDFactor *addf = new ADDFactor(output, *f);
+            addfactors.emplace_back(addf);
+        }
+    }
+
     int read_uai_model(
         const char *filename,
         unsigned &order,
         vector<unique_ptr<Variable>> &variables,
         vector<shared_ptr<Factor>> &factors,
+        vector<shared_ptr<ADDFactor>> &addfactors,
         vector<unsigned> &prior,
         unordered_map<unsigned,const Variable*> &transition,
         vector<unsigned> &sensor) {
@@ -148,6 +159,7 @@ namespace dbn {
             read_transition_model(input_file, transition_order, transition, variables);
             read_sensor_model(input_file, sensor_order, sensor);
             read_factors(input_file, order, variables, factors);
+            read_addfactors(factors, addfactors);
             input_file.close();
             return 0;
         }

@@ -96,12 +96,13 @@ int main(int argc, char *argv[])
     unsigned order;
     vector<unique_ptr<Variable>> variables;
     vector<shared_ptr<Factor>> factors;
+    vector<shared_ptr<ADDFactor>> addfactors;
 
     vector<unsigned> prior;
     unordered_map<unsigned,const Variable*> transition;
     vector<unsigned> sensor;
 
-    if (read_uai_model(argv[1], order, variables, factors, prior, transition, sensor)) return -1;
+    if (read_uai_model(argv[1], order, variables, factors, addfactors, prior, transition, sensor)) return -1;
     cout << ">> MODEL: " << argv[1] << endl;
     print_model(variables, factors, prior, transition, sensor);
 
@@ -118,9 +119,12 @@ int main(int argc, char *argv[])
     vector<shared_ptr<Factor>> states = filtering(factors, prior, transition, sensor, observations);
     print_trajectory(states, state_variables);
 
+    cout << "Forward ADD filtering" << endl;
+    vector<shared_ptr<ADDFactor>> states2 = filtering(addfactors, prior, transition, sensor, observations);
+
     cout << "Unrolled filtering:" << endl;
-    vector<shared_ptr<Factor>> states2 = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
-    print_trajectory(states2, state_variables);
+    vector<shared_ptr<Factor>> states3 = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
+    print_trajectory(states3, state_variables);
 
     return 0;
 }

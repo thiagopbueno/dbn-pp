@@ -21,6 +21,7 @@
 
 #include "variable.h"
 #include "factor.h"
+#include "addfactor.h"
 
 #include <vector>
 #include <unordered_map>
@@ -34,6 +35,7 @@ namespace dbn {
 		unsigned &order,
 		std::vector<std::unique_ptr<Variable>> &variables,
 		std::vector<std::shared_ptr<Factor>> &factors,
+		std::vector<std::shared_ptr<ADDFactor>> &addfactors,
 		std::vector<unsigned> &prior,
 		std::unordered_map<unsigned,const Variable*> &transition,
 		std::vector<unsigned> &sensor
