@@ -44,17 +44,14 @@ void print_trajectory(vector<shared_ptr<Factor>> &states, set<unsigned> &state_v
 
 void print_test_add(vector<shared_ptr<Factor>> &factors, vector<unique_ptr<Variable>> &variables)
 {
-    Cudd mgr(factors.size(), 0);
-    Cudd_AutodynDisable(mgr.getManager());
-
-    ADDFactor distribution(mgr);
+    ADDFactor distribution;
 
     for (auto &f : factors) {
         const Domain &domain = f->domain();
         unsigned id = domain[(unsigned)0]->id();
 
         string output = to_string(id);
-        ADDFactor addf(mgr, output, *f);
+        ADDFactor addf(output, *f);
         cout << addf << endl;
 
         // addf = addf.sum_out(variables[0].get());

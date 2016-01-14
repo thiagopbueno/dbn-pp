@@ -27,20 +27,20 @@ using namespace std;
 
 namespace dbn {
 
-	ADDFactor::ADDFactor(Cudd &mgr, const string &output, double value) :
-		_mgr(mgr),
-		_dd(_mgr.constant(value)),
+	Cudd ADDFactor::mgr(0,0);
+
+	ADDFactor::ADDFactor(const string &output, double value) :
+		_dd(mgr.constant(value)),
 		_output(output) { }
 			
-	ADDFactor::ADDFactor(Cudd &mgr, const string &output, const Factor &factor) :
-		_mgr(mgr),
+	ADDFactor::ADDFactor(const string &output, const Factor &factor) :
 		_output(output) {
 
 		for (auto pv : factor.domain().scope()) {
 			_scope.insert(pv);
 		}
 
-		_dd = _mgr.addZero();
+		_dd = mgr.addZero();
 
 		unsigned width = factor.width();
 		vector<unsigned> inst(width, 0);
@@ -49,10 +49,10 @@ namespace dbn {
 		for (unsigned l = 0; l < factor.size(); ++l) {
 			unsigned pos = domain.position_instantiation(inst);
 			double value = factor[pos];
-			ADD line = _mgr.constant(value);
+			ADD line = mgr.constant(value);
 
 			for (unsigned i = 0; i < width; ++i) {
-				ADD v = _mgr.addVar(domain[i]->id());
+				ADD v = mgr.addVar(domain[i]->id());
 				line *= (inst[i] ? v : ~v);
 			}
 
@@ -61,13 +61,12 @@ namespace dbn {
 		}
 	}
 
-	ADDFactor::ADDFactor(Cudd &mgr, const string &output, const ADD &dd, set<const Variable*> scope) :
-		_mgr(mgr),
+	ADDFactor::ADDFactor(const string &output, const ADD &dd, set<const Variable*> scope) :
 		_dd(dd),
 		_output(output),
 		_scope(scope) { }
 
-	ADDFactor::ADDFactor(ADDFactor &&addf) : _mgr(addf._mgr) {
+	ADDFactor::ADDFactor(ADDFactor &&addf) {
 		_dd = addf._dd;
 		_output = addf._output;
 		_scope = addf._scope;
@@ -77,7 +76,6 @@ namespace dbn {
 		if (this != &f) {
 			_scope.clear();
 
-			_mgr = f._mgr;
 			_dd = f._dd;
 			_output = f._output;
 			_scope = f._scope;
@@ -105,7 +103,7 @@ namespace dbn {
 		double partition = 0;
 		int *cube;
 		CUDD_VALUE_TYPE value;
-		DdGen *gen = Cudd_FirstCube(_mgr.getManager(), _dd.getNode(), &cube, &value);
+		DdGen *gen = Cudd_FirstCube(mgr.getManager(), _dd.getNode(), &cube, &value);
 		while (!Cudd_IsGenEmpty(gen)) {
 			partition += value;
 			Cudd_NextCube(gen, &cube, &value);
@@ -122,9 +120,9 @@ namespace dbn {
 		unsigned index = variable->id();
 		string output = "sum_out(" + _output + "," + to_string(index) + ")";
 
-		if (!in_scope(variable)) return ADDFactor(_mgr, output, _dd, _scope);
+		if (!in_scope(variable)) return ADDFactor(output, _dd, _scope);
 
-		ADD positive = _mgr.addVar(index);
+		ADD positive = mgr.addVar(index);
 		ADD negated  = ~positive;
 		ADD summed_out = _dd.Restrict(positive) + _dd.Restrict(negated);
 
@@ -135,7 +133,7 @@ namespace dbn {
 			}
 		}
 
-		return ADDFactor(_mgr, output, summed_out, scope);
+		return ADDFactor(output, summed_out, scope);
 	}
 
 	ADDFactor ADDFactor::product(const ADDFactor &f) {
@@ -148,25 +146,25 @@ namespace dbn {
 
 		ADD prod = _dd * f._dd;
 
-		return ADDFactor(_mgr, output, prod, scope);
+		return ADDFactor(output, prod, scope);
 	}
 
 	ADDFactor ADDFactor::normalize() {
-		DdManager *mgr = _mgr.getManager();
-		DdNode *partitionNode = Cudd_addConst(mgr, partition());
-		DdNode *ddNode = Cudd_addApply(mgr, Cudd_addDivide, _dd.getNode(), partitionNode);
+		DdManager *ddmgr = mgr.getManager();
+		DdNode *partitionNode = Cudd_addConst(ddmgr, partition());
+		DdNode *ddNode = Cudd_addApply(ddmgr, Cudd_addDivide, _dd.getNode(), partitionNode);
 		string output = "norm(" + _output + ")";
-		return ADDFactor(_mgr, output, ADD(_mgr, ddNode), _scope);
+		return ADDFactor(output, ADD(mgr, ddNode), _scope);
 	}
 
 	ADDFactor ADDFactor::conditioning(const std::unordered_map<unsigned,unsigned> &evidence) {
 		string output = "cond(" + _output + ",{";
-		ADD evidenceVariables = _mgr.constant(1.0);
+		ADD evidenceVariables = mgr.constant(1.0);
 		for (auto it : evidence) {
 			unsigned id = it.first;
 			unsigned value = it.second;
 			output += " " + to_string(id) + ":" + to_string(value);
-			evidenceVariables *= (value ? _mgr.addVar(id) : ~_mgr.addVar(id));
+			evidenceVariables *= (value ? mgr.addVar(id) : ~mgr.addVar(id));
 		}
 		output += " })";
 		set<const Variable*> scope;
@@ -176,7 +174,7 @@ namespace dbn {
 			}
 		}
 		ADD conditioned = _dd.Restrict(evidenceVariables);
-		return ADDFactor(_mgr, output, conditioned, scope);
+		return ADDFactor(output, conditioned, scope);
 	}
 
 	int ADDFactor::dump_dot(string filename) {
@@ -187,7 +185,7 @@ namespace dbn {
 		outputs[0] = _dd.getNode();
 		const char *outputNames[1];
 		outputNames[0] = _output.c_str();
-		result = Cudd_DumpDot(_mgr.getManager(), 1, outputs, NULL, outputNames, f);
+		result = Cudd_DumpDot(mgr.getManager(), 1, outputs, NULL, outputNames, f);
 		fclose(f);
 		return !result;
 	}
@@ -205,7 +203,7 @@ namespace dbn {
 		f._dd.print(width,3);
 		int *cube;
 		CUDD_VALUE_TYPE value;
-		DdGen *gen = Cudd_FirstCube(f._mgr.getManager(), f._dd.getNode(), &cube, &value);
+		DdGen *gen = Cudd_FirstCube(ADDFactor::mgr.getManager(), f._dd.getNode(), &cube, &value);
 		while (!Cudd_IsGenEmpty(gen)) {
 			for (unsigned i = 0; i < width; i++) {
 				os << cube[i] << " ";
