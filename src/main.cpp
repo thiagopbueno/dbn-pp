@@ -42,19 +42,28 @@ void print_observations(vector<unordered_map<unsigned,unsigned>> &observations);
 
 void print_trajectory(vector<shared_ptr<Factor>> &states, set<unsigned> &state_variables);
 
-void print_test_add(vector<shared_ptr<Factor>> &factors)
+void print_test_add(vector<shared_ptr<Factor>> &factors, vector<unique_ptr<Variable>> &variables)
 {
     Cudd mgr(factors.size(), 0);
     Cudd_AutodynDisable(mgr.getManager());
     for (auto &f : factors) {
+
         const Domain &domain = f->domain();
         unsigned id = domain[(unsigned)0]->id();
+
         string output = to_string(id);
         ADDFactor addf(mgr, output, *f);
+
         string filename = "var" + output + ".dot";
-        addf.dump_dot(filename.c_str());
+        addf.dump_dot(filename);
         cout << filename << endl;
         cout << addf << endl;
+
+        ADDFactor addf_summed_out = addf.sum_out(variables[1].get());
+        filename = addf_summed_out.output() + ".dot";
+        addf_summed_out.dump_dot(filename);
+        cout << filename << endl;
+        cout << addf_summed_out << endl;
     }
 }
 
@@ -82,7 +91,7 @@ int main(int argc, char *argv[])
     cout << ">> MODEL: " << argv[1] << endl;
     print_model(variables, factors, prior, transition, sensor);
 
-    print_test_add(factors);
+    print_test_add(factors, variables);
 
     vector<unordered_map<unsigned,unsigned>> observations;
     set<unsigned> state_variables;

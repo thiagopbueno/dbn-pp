@@ -21,26 +21,34 @@
 
 #include "factor.h"
 #include "domain.h"
+#include "variable.h"
 #include "cuddObj.hh"
 
 #include <iostream>
+#include <set>
 
 namespace dbn {
 
 	class ADDFactor {
 	public:
-		ADDFactor(Cudd &mgr, std::string &output, double value);
-		ADDFactor(Cudd &mgr, std::string &output, Factor &factor);
+		ADDFactor(Cudd &mgr, const std::string &output, double value);
+		ADDFactor(Cudd &mgr, const std::string &output, const Factor &factor);
+		ADDFactor(Cudd &mgr, const std::string &output, const ADD &dd, std::set<const Variable*> scope);
 
-		int dump_dot(const char *filename);
+		std::string output() const;
 
+		bool in_scope(const Variable *variable);
+
+		ADDFactor sum_out(const Variable *variable);
+
+		int dump_dot(std::string filename);
 		friend std::ostream &operator<<(std::ostream& o, const ADDFactor &f);
 
 	private:
 		Cudd &_mgr;
 		ADD _dd;
-		std::unique_ptr<Domain> _domain;
-		const char *_output;
+		std::string _output;
+		std::set<const Variable*> _scope;
 	};
 
 }

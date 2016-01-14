@@ -36,6 +36,7 @@ namespace dbn {
 
         unsigned width() const { return _width; };
         unsigned size()  const { return _size;  };
+        std::vector<const Variable*> scope() const { return _scope; };
 
         const Variable *operator[](unsigned i) const;
         unsigned operator[](const Variable* v) const;
