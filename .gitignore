@@ -3,7 +3,8 @@
 
 # graphviz files
 *.dot
-*.dot.ps
+*.ps
+*.pdf
 
 dbn-debug
 dbn-debug.dSYM/

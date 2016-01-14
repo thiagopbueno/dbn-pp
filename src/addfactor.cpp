@@ -67,8 +67,51 @@ namespace dbn {
 		_output(output),
 		_scope(scope) { }
 
+	ADDFactor::ADDFactor(ADDFactor &&addf) : _mgr(addf._mgr) {
+		_dd = addf._dd;
+		_output = addf._output;
+		_scope = addf._scope;
+	}
+
+	ADDFactor &ADDFactor::operator=(ADDFactor &&addf) {
+		if (this != &addf) {
+			_scope.clear();
+
+			_mgr = addf._mgr;
+			_dd = addf._dd;
+			_output = addf._output;
+			_scope = addf._scope;
+
+			addf._output = "";
+			addf._scope.clear();
+		}
+
+		return *this;
+	}
+
+	ADDFactor ADDFactor::operator*(ADDFactor &addf) {
+		return product(addf);
+	}
+
+	void ADDFactor::operator*=(ADDFactor &addf) {
+		*this = product(addf);
+	}
+
 	string ADDFactor::output() const {
 		return _output;
+	}
+
+	double ADDFactor::partition() const {
+		double partition = 0;
+		int *cube;
+		CUDD_VALUE_TYPE value;
+		DdGen *gen = Cudd_FirstCube(_mgr.getManager(), _dd.getNode(), &cube, &value);
+		while (!Cudd_IsGenEmpty(gen)) {
+			partition += value;
+			Cudd_NextCube(gen, &cube, &value);
+		}
+		Cudd_GenFree(gen);
+		return partition;
 	}
 
 	bool ADDFactor::in_scope(const Variable *variable) {
@@ -95,6 +138,19 @@ namespace dbn {
 		return ADDFactor(_mgr, output, summed_out, scope);
 	}
 
+	ADDFactor ADDFactor::product(const ADDFactor &dd) {
+		string output = _output + "*" + dd._output;
+
+		set<const Variable*> scope = _scope;
+		for (auto pv : dd._scope) {
+			scope.insert(pv);
+		}
+
+		ADD prod = _dd * dd._dd;
+
+		return ADDFactor(_mgr, output, prod, scope);
+	}
+
 	int ADDFactor::dump_dot(string filename) {
 		int result;
 		FILE *f = fopen(filename.c_str(), "w");
@@ -110,7 +166,13 @@ namespace dbn {
 
 
 	ostream &operator<<(ostream& os, const ADDFactor &f) {
-		os << "ADDFactor: (" << f._output << ")" << endl;
+		os << "ADDFactor: " << f._output << "" << endl;
+		os << "partition = " << f.partition() << endl;
+		os << "scope {";
+		for (auto pf : f._scope) {
+			os << " " << pf->id();
+		}
+		os << " }" << endl;
 		unsigned width = f._scope.size();
 		f._dd.print(width,3);
 		int *cube;

@@ -31,15 +31,22 @@ namespace dbn {
 
 	class ADDFactor {
 	public:
-		ADDFactor(Cudd &mgr, const std::string &output, double value);
+		ADDFactor(Cudd &mgr, const std::string &output = "T", double value = 1.0);
 		ADDFactor(Cudd &mgr, const std::string &output, const Factor &factor);
 		ADDFactor(Cudd &mgr, const std::string &output, const ADD &dd, std::set<const Variable*> scope);
+		ADDFactor(ADDFactor &&addf);
+
+		ADDFactor &operator=(ADDFactor &&addf);
+		ADDFactor operator*(ADDFactor &addf);
+		void operator*=(ADDFactor &addf);
 
 		std::string output() const;
+		double partition() const;
 
 		bool in_scope(const Variable *variable);
 
 		ADDFactor sum_out(const Variable *variable);
+		ADDFactor product(const ADDFactor &dd);
 
 		int dump_dot(std::string filename);
 		friend std::ostream &operator<<(std::ostream& o, const ADDFactor &f);
