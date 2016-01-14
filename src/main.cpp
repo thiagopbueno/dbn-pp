@@ -55,25 +55,25 @@ void print_test_add(vector<shared_ptr<Factor>> &factors, vector<unique_ptr<Varia
 
         string output = to_string(id);
         ADDFactor addf(mgr, output, *f);
+        cout << addf << endl;
+
+        addf = addf.sum_out(variables[0].get());
+        cout << addf << endl;
+
+        addf = addf.normalize();
+        cout << addf << endl;
+
+        // string filename = addf.output() + ".dot";
+        // addf.dump_dot(filename);
+
         // distribution = distribution.product(addf);
         // distribution = distribution * addf;
         distribution *= addf;
-
-        string filename = "var" + output + ".dot";
-        // addf.dump_dot(filename);
-        // cout << filename << endl;
-        cout << addf << endl;
     }
 
     string filename = "distribution.dot";
     distribution.dump_dot(filename);
     cout << distribution << endl;
-
-    ADDFactor addf_summed_out = distribution.sum_out(variables[0].get());
-    filename = addf_summed_out.output() + ".dot";
-    addf_summed_out.dump_dot(filename);
-    cout << addf_summed_out << endl;
-    cout << endl;
 }
 
 void usage(const char *filename)

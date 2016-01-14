@@ -151,6 +151,14 @@ namespace dbn {
 		return ADDFactor(_mgr, output, prod, scope);
 	}
 
+	ADDFactor ADDFactor::normalize() {
+		DdManager *mgr = _mgr.getManager();
+		DdNode *partitionNode = Cudd_addConst(mgr, partition());
+		DdNode *ddNode = Cudd_addApply(mgr, Cudd_addDivide, _dd.getNode(), partitionNode);
+		string output = "norm(" + _output + ")";
+		return ADDFactor(_mgr, output, ADD(_mgr, ddNode), _scope);
+	}
+
 	int ADDFactor::dump_dot(string filename) {
 		int result;
 		FILE *f = fopen(filename.c_str(), "w");

@@ -47,6 +47,7 @@ namespace dbn {
 
 		ADDFactor sum_out(const Variable *variable);
 		ADDFactor product(const ADDFactor &dd);
+		ADDFactor normalize();
 
 		int dump_dot(std::string filename);
 		friend std::ostream &operator<<(std::ostream& o, const ADDFactor &f);
