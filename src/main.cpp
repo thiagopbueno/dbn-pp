@@ -57,11 +57,11 @@ void print_test_add(vector<shared_ptr<Factor>> &factors, vector<unique_ptr<Varia
         ADDFactor addf(mgr, output, *f);
         cout << addf << endl;
 
-        addf = addf.sum_out(variables[0].get());
-        cout << addf << endl;
+        // addf = addf.sum_out(variables[0].get());
+        // cout << addf << endl;
 
-        addf = addf.normalize();
-        cout << addf << endl;
+        // addf = addf.normalize();
+        // cout << addf << endl;
 
         // string filename = addf.output() + ".dot";
         // addf.dump_dot(filename);
@@ -73,6 +73,14 @@ void print_test_add(vector<shared_ptr<Factor>> &factors, vector<unique_ptr<Varia
 
     string filename = "distribution.dot";
     distribution.dump_dot(filename);
+    cout << distribution << endl;
+
+    unordered_map<unsigned, unsigned> evidence;
+    evidence[2] = 0;
+    evidence[3] = 0;
+    distribution = distribution.conditioning(evidence);
+    distribution = distribution.sum_out(variables[0].get());
+    distribution = distribution.normalize();
     cout << distribution << endl;
 }
 

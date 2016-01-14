@@ -73,28 +73,28 @@ namespace dbn {
 		_scope = addf._scope;
 	}
 
-	ADDFactor &ADDFactor::operator=(ADDFactor &&addf) {
-		if (this != &addf) {
+	ADDFactor &ADDFactor::operator=(ADDFactor &&f) {
+		if (this != &f) {
 			_scope.clear();
 
-			_mgr = addf._mgr;
-			_dd = addf._dd;
-			_output = addf._output;
-			_scope = addf._scope;
+			_mgr = f._mgr;
+			_dd = f._dd;
+			_output = f._output;
+			_scope = f._scope;
 
-			addf._output = "";
-			addf._scope.clear();
+			f._output = "";
+			f._scope.clear();
 		}
 
 		return *this;
 	}
 
-	ADDFactor ADDFactor::operator*(ADDFactor &addf) {
-		return product(addf);
+	ADDFactor ADDFactor::operator*(ADDFactor &f) {
+		return product(f);
 	}
 
-	void ADDFactor::operator*=(ADDFactor &addf) {
-		*this = product(addf);
+	void ADDFactor::operator*=(ADDFactor &f) {
+		*this = product(f);
 	}
 
 	string ADDFactor::output() const {
@@ -138,15 +138,15 @@ namespace dbn {
 		return ADDFactor(_mgr, output, summed_out, scope);
 	}
 
-	ADDFactor ADDFactor::product(const ADDFactor &dd) {
-		string output = _output + "*" + dd._output;
+	ADDFactor ADDFactor::product(const ADDFactor &f) {
+		string output = _output + "*" + f._output;
 
 		set<const Variable*> scope = _scope;
-		for (auto pv : dd._scope) {
+		for (auto pv : f._scope) {
 			scope.insert(pv);
 		}
 
-		ADD prod = _dd * dd._dd;
+		ADD prod = _dd * f._dd;
 
 		return ADDFactor(_mgr, output, prod, scope);
 	}
@@ -157,6 +157,26 @@ namespace dbn {
 		DdNode *ddNode = Cudd_addApply(mgr, Cudd_addDivide, _dd.getNode(), partitionNode);
 		string output = "norm(" + _output + ")";
 		return ADDFactor(_mgr, output, ADD(_mgr, ddNode), _scope);
+	}
+
+	ADDFactor ADDFactor::conditioning(const std::unordered_map<unsigned,unsigned> &evidence) {
+		string output = "cond(" + _output + ",{";
+		ADD evidenceVariables = _mgr.constant(1.0);
+		for (auto it : evidence) {
+			unsigned id = it.first;
+			unsigned value = it.second;
+			output += " " + to_string(id) + ":" + to_string(value);
+			evidenceVariables *= (value ? _mgr.addVar(id) : ~_mgr.addVar(id));
+		}
+		output += " })";
+		set<const Variable*> scope;
+		for (auto pv : _scope) {
+			if (evidence.find(pv->id()) == evidence.end()) {
+				scope.insert(pv);
+			}
+		}
+		ADD conditioned = _dd.Restrict(evidenceVariables);
+		return ADDFactor(_mgr, output, conditioned, scope);
 	}
 
 	int ADDFactor::dump_dot(string filename) {

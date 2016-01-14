@@ -26,6 +26,7 @@
 
 #include <iostream>
 #include <set>
+#include <unordered_map>
 
 namespace dbn {
 
@@ -34,11 +35,11 @@ namespace dbn {
 		ADDFactor(Cudd &mgr, const std::string &output = "T", double value = 1.0);
 		ADDFactor(Cudd &mgr, const std::string &output, const Factor &factor);
 		ADDFactor(Cudd &mgr, const std::string &output, const ADD &dd, std::set<const Variable*> scope);
-		ADDFactor(ADDFactor &&addf);
+		ADDFactor(ADDFactor &&f);
 
-		ADDFactor &operator=(ADDFactor &&addf);
-		ADDFactor operator*(ADDFactor &addf);
-		void operator*=(ADDFactor &addf);
+		ADDFactor &operator=(ADDFactor &&f);
+		ADDFactor operator*(ADDFactor &f);
+		void operator*=(ADDFactor &f);
 
 		std::string output() const;
 		double partition() const;
@@ -46,8 +47,9 @@ namespace dbn {
 		bool in_scope(const Variable *variable);
 
 		ADDFactor sum_out(const Variable *variable);
-		ADDFactor product(const ADDFactor &dd);
+		ADDFactor product(const ADDFactor &f);
 		ADDFactor normalize();
+		ADDFactor conditioning(const std::unordered_map<unsigned,unsigned> &evidence);
 
 		int dump_dot(std::string filename);
 		friend std::ostream &operator<<(std::ostream& o, const ADDFactor &f);
