@@ -35,6 +35,7 @@ namespace dbn {
 		ADDFactor(const std::string &output = "T", double value = 1.0);
 		ADDFactor(const std::string &output, const Factor &factor);
 		ADDFactor(const std::string &output, const ADD &dd, std::set<const Variable*> scope);
+		ADDFactor(const ADDFactor &f);
 		ADDFactor(ADDFactor &&f);
 
 		ADDFactor &operator=(ADDFactor &&f);

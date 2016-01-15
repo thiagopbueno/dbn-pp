@@ -66,10 +66,18 @@ namespace dbn {
 		_output(output),
 		_scope(scope) { }
 
-	ADDFactor::ADDFactor(ADDFactor &&addf) {
-		_dd = addf._dd;
-		_output = addf._output;
-		_scope = addf._scope;
+	ADDFactor::ADDFactor(const ADDFactor &f) {
+		_dd = f._dd;
+		_output = f._output;
+		_scope = f._scope;
+	}
+
+	ADDFactor::ADDFactor(ADDFactor &&f) {
+		_dd = f._dd;
+		_output = f._output;
+		_scope = f._scope;
+		f._output = "";
+		f._scope.clear();
 	}
 
 	ADDFactor &ADDFactor::operator=(ADDFactor &&f) {
