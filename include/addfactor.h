@@ -34,7 +34,7 @@ namespace dbn {
 	public:
 		ADDFactor(const std::string &output = "T", double value = 1.0);
 		ADDFactor(const std::string &output, const Factor &factor);
-		ADDFactor(const std::string &output, const ADD &dd, std::set<const Variable*> scope);
+		ADDFactor(const std::string &output, const ADD &dd, const Domain &domain);
 		ADDFactor(const ADDFactor &f);
 		ADDFactor(ADDFactor &&f);
 
@@ -44,6 +44,7 @@ namespace dbn {
 
 		std::string output() const;
 		double partition() const;
+		const Domain &domain() const { return *_domain; };
 
 		ADDFactor change_variables(std::unordered_map<unsigned,const Variable*> renaming);
 		bool in_scope(const Variable *variable) const;
@@ -61,7 +62,7 @@ namespace dbn {
 
 		ADD _dd;
 		std::string _output;
-		std::set<const Variable*> _scope;
+		std::unique_ptr<Domain> _domain;
 	};
 
 }

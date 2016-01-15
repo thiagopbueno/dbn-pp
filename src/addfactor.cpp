@@ -31,67 +31,58 @@ namespace dbn {
 
 	ADDFactor::ADDFactor(const string &output, double value) :
 		_dd(mgr.constant(value)),
-		_output(output) { }
+		_output(output),
+		_domain(std::unique_ptr<Domain>(new Domain)) { }
 			
 	ADDFactor::ADDFactor(const string &output, const Factor &factor) :
-		_output(output) {
-
-		for (auto pv : factor.domain().scope()) {
-			_scope.insert(pv);
-		}
+		_output(output),
+		_domain(new Domain(factor.domain())) {
 
 		_dd = mgr.addZero();
 
 		unsigned width = factor.width();
 		vector<unsigned> inst(width, 0);
 
-		const Domain &domain = factor.domain();
 		for (unsigned l = 0; l < factor.size(); ++l) {
-			unsigned pos = domain.position_instantiation(inst);
+			unsigned pos = _domain->position_instantiation(inst);
 			double value = factor[pos];
 			ADD line = mgr.constant(value);
 
 			for (unsigned i = 0; i < width; ++i) {
-				ADD v = mgr.addVar(domain[i]->id());
+				ADD v = mgr.addVar((*_domain)[i]->id());
 				line *= (inst[i] ? v : ~v);
 			}
 
 			_dd += line;
-			domain.next_instantiation(inst);
+			_domain->next_instantiation(inst);
 		}
 	}
 
-	ADDFactor::ADDFactor(const string &output, const ADD &dd, set<const Variable*> scope) :
+	ADDFactor::ADDFactor(const string &output, const ADD &dd, const Domain &domain) :
 		_dd(dd),
 		_output(output),
-		_scope(scope) { }
+		_domain(unique_ptr<Domain>(new Domain(domain))) { }
 
 	ADDFactor::ADDFactor(const ADDFactor &f) {
 		_dd = f._dd;
 		_output = f._output;
-		_scope = f._scope;
+		_domain = unique_ptr<Domain>(new Domain(*f._domain));
 	}
 
 	ADDFactor::ADDFactor(ADDFactor &&f) {
 		_dd = f._dd;
 		_output = f._output;
-		_scope = f._scope;
+		_domain = move(f._domain);
 		f._output = "";
-		f._scope.clear();
 	}
 
 	ADDFactor &ADDFactor::operator=(ADDFactor &&f) {
 		if (this != &f) {
-			_scope.clear();
-
 			_dd = f._dd;
 			_output = f._output;
-			_scope = f._scope;
-
+			_domain = move(f._domain);
 			f._output = "";
-			f._scope.clear();
 		}
-
 		return *this;
 	}
 
@@ -121,16 +112,9 @@ namespace dbn {
 	}
 
 	ADDFactor ADDFactor::change_variables(unordered_map<unsigned,const Variable*> renaming) {
-		set<const Variable*> new_scope;
-		for (auto pv : _scope) {
-			unsigned id = pv->id();
-			if (renaming.count(id)) {
-				new_scope.insert(renaming[id]);
-			}
-			else {
-				new_scope.insert(pv);
-			}
-		}
+
+		Domain new_domain(*_domain);
+		new_domain.modify_scope(renaming);
 
 		vector<ADD> x, y;
 		for (auto it_renaming : renaming) {
@@ -142,44 +126,48 @@ namespace dbn {
 		ADD swapped = _dd.SwapVariables(x, y);
 
 		string output = "renamed(" + _output + ")";
-		return ADDFactor(output, swapped, new_scope);
+		return ADDFactor(output, swapped, new_domain);
 	}
 
 	bool ADDFactor::in_scope(const Variable *variable) const {
-		return (_scope.count(variable));
+		return (_domain->in_scope(variable));
 	}
 
 	ADDFactor ADDFactor::sum_out(const Variable *variable) const {
 		unsigned index = variable->id();
 		string output = "sum_out(" + _output + "," + to_string(index) + ")";
 
-		if (!in_scope(variable)) return ADDFactor(output, _dd, _scope);
+		if (!in_scope(variable)) return ADDFactor(output, _dd, *_domain);
 
 		ADD positive = mgr.addVar(index);
 		ADD negated  = ~positive;
 		ADD summed_out = _dd.Restrict(positive) + _dd.Restrict(negated);
 
-		set<const Variable*> scope;
-		for (auto pv : _scope) {
+		vector<const Variable*> scope;
+		for (auto pv : _domain->scope()) {
 			if (pv->id() != index) {
-				scope.insert(pv);
+				scope.push_back(pv);
 			}
 		}
+		Domain domain(scope);
 
-		return ADDFactor(output, summed_out, scope);
+		return ADDFactor(output, summed_out, domain);
 	}
 
 	ADDFactor ADDFactor::product(const ADDFactor &f) const {
 		string output = _output + "*" + f._output;
 
-		set<const Variable*> scope = _scope;
-		for (auto pv : f._scope) {
-			scope.insert(pv);
+		vector<const Variable*> scope = _domain->scope();
+		for (auto pv : f.domain().scope()) {
+			if (!_domain->in_scope(pv)) {
+				scope.push_back(pv);
+			}
 		}
+		Domain domain(scope);
 
 		ADD prod = _dd * f._dd;
 
-		return ADDFactor(output, prod, scope);
+		return ADDFactor(output, prod, domain);
 	}
 
 	ADDFactor ADDFactor::normalize() const {
@@ -187,7 +175,7 @@ namespace dbn {
 		DdNode *partitionNode = Cudd_addConst(ddmgr, partition());
 		DdNode *ddNode = Cudd_addApply(ddmgr, Cudd_addDivide, _dd.getNode(), partitionNode);
 		string output = "norm(" + _output + ")";
-		return ADDFactor(output, ADD(mgr, ddNode), _scope);
+		return ADDFactor(output, ADD(mgr, ddNode), *_domain);
 	}
 
 	ADDFactor ADDFactor::conditioning(const unordered_map<unsigned,unsigned> &evidence) const {
@@ -200,14 +188,15 @@ namespace dbn {
 			evidenceVariables *= (value ? mgr.addVar(id) : ~mgr.addVar(id));
 		}
 		output += " })";
-		set<const Variable*> scope;
-		for (auto pv : _scope) {
+		vector<const Variable*> scope;
+		for (auto pv : _domain->scope()) {
 			if (evidence.find(pv->id()) == evidence.end()) {
-				scope.insert(pv);
+				scope.push_back(pv);
 			}
 		}
+		Domain domain(scope);
 		ADD conditioned = _dd.Restrict(evidenceVariables);
-		return ADDFactor(output, conditioned, scope);
+		return ADDFactor(output, conditioned, domain);
 	}
 
 	int ADDFactor::dump_dot(string filename) const {
@@ -229,11 +218,11 @@ namespace dbn {
 		os << "ADDFactor: " << endl;
 		os << "partition = " << f.partition() << endl;
 		os << "scope {";
-		for (auto pf : f._scope) {
+		for (auto pf : f.domain().scope()) {
 			os << " " << pf->id();
 		}
 		os << " }" << endl;
-		unsigned width = f._scope.size();
+		unsigned width = f.domain().scope().size();
 		// f._dd.print(width,3);
 		int *cube;
 		CUDD_VALUE_TYPE value;
