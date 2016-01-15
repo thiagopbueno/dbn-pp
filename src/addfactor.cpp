@@ -87,11 +87,11 @@ namespace dbn {
 		return *this;
 	}
 
-	ADDFactor ADDFactor::operator*(ADDFactor &f) {
+	ADDFactor ADDFactor::operator*(const ADDFactor &f) {
 		return product(f);
 	}
 
-	void ADDFactor::operator*=(ADDFactor &f) {
+	void ADDFactor::operator*=(const ADDFactor &f) {
 		*this = product(f);
 	}
 
@@ -116,7 +116,7 @@ namespace dbn {
 		return (_scope.count(variable));
 	}
 
-	ADDFactor ADDFactor::sum_out(const Variable *variable) {
+	ADDFactor ADDFactor::sum_out(const Variable *variable) const {
 		unsigned index = variable->id();
 		string output = "sum_out(" + _output + "," + to_string(index) + ")";
 
@@ -136,7 +136,7 @@ namespace dbn {
 		return ADDFactor(output, summed_out, scope);
 	}
 
-	ADDFactor ADDFactor::product(const ADDFactor &f) {
+	ADDFactor ADDFactor::product(const ADDFactor &f) const {
 		string output = _output + "*" + f._output;
 
 		set<const Variable*> scope = _scope;
@@ -149,7 +149,7 @@ namespace dbn {
 		return ADDFactor(output, prod, scope);
 	}
 
-	ADDFactor ADDFactor::normalize() {
+	ADDFactor ADDFactor::normalize() const {
 		DdManager *ddmgr = mgr.getManager();
 		DdNode *partitionNode = Cudd_addConst(ddmgr, partition());
 		DdNode *ddNode = Cudd_addApply(ddmgr, Cudd_addDivide, _dd.getNode(), partitionNode);
@@ -157,7 +157,7 @@ namespace dbn {
 		return ADDFactor(output, ADD(mgr, ddNode), _scope);
 	}
 
-	ADDFactor ADDFactor::conditioning(const std::unordered_map<unsigned,unsigned> &evidence) {
+	ADDFactor ADDFactor::conditioning(const unordered_map<unsigned,unsigned> &evidence) const {
 		string output = "cond(" + _output + ",{";
 		ADD evidenceVariables = mgr.constant(1.0);
 		for (auto it : evidence) {
@@ -177,7 +177,7 @@ namespace dbn {
 		return ADDFactor(output, conditioned, scope);
 	}
 
-	int ADDFactor::dump_dot(string filename) {
+	int ADDFactor::dump_dot(string filename) const {
 		int result;
 		FILE *f = fopen(filename.c_str(), "w");
 		if (!f) return -1;

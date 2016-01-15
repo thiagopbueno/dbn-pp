@@ -38,20 +38,20 @@ namespace dbn {
 		ADDFactor(ADDFactor &&f);
 
 		ADDFactor &operator=(ADDFactor &&f);
-		ADDFactor operator*(ADDFactor &f);
-		void operator*=(ADDFactor &f);
+		ADDFactor operator*(const ADDFactor &f);
+		void operator*=(const ADDFactor &f);
 
 		std::string output() const;
 		double partition() const;
 
 		bool in_scope(const Variable *variable);
 
-		ADDFactor sum_out(const Variable *variable);
-		ADDFactor product(const ADDFactor &f);
-		ADDFactor normalize();
-		ADDFactor conditioning(const std::unordered_map<unsigned,unsigned> &evidence);
+		ADDFactor sum_out(const Variable *variable) const;
+		ADDFactor product(const ADDFactor &f) const;
+		ADDFactor normalize() const;
+		ADDFactor conditioning(const std::unordered_map<unsigned,unsigned> &evidence) const;
 
-		int dump_dot(std::string filename);
+		int dump_dot(std::string filename) const;
 		friend std::ostream &operator<<(std::ostream& o, const ADDFactor &f);
 
 	private:
