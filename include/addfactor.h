@@ -45,7 +45,8 @@ namespace dbn {
 		std::string output() const;
 		double partition() const;
 
-		bool in_scope(const Variable *variable);
+		ADDFactor change_variables(std::unordered_map<unsigned,const Variable*> renaming);
+		bool in_scope(const Variable *variable) const;
 
 		ADDFactor sum_out(const Variable *variable) const;
 		ADDFactor product(const ADDFactor &f) const;

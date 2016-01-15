@@ -120,7 +120,32 @@ namespace dbn {
 		return partition;
 	}
 
-	bool ADDFactor::in_scope(const Variable *variable) {
+	ADDFactor ADDFactor::change_variables(unordered_map<unsigned,const Variable*> renaming) {
+		set<const Variable*> new_scope;
+		for (auto pv : _scope) {
+			unsigned id = pv->id();
+			if (renaming.count(id)) {
+				new_scope.insert(renaming[id]);
+			}
+			else {
+				new_scope.insert(pv);
+			}
+		}
+
+		vector<ADD> x, y;
+		for (auto it_renaming : renaming) {
+			unsigned from = it_renaming.first;
+			unsigned to = it_renaming.second->id();
+			x.push_back(mgr.addVar(from));
+			y.push_back(mgr.addVar(to));
+		}
+		ADD swapped = _dd.SwapVariables(x, y);
+
+		string output = "renamed(" + _output + ")";
+		return ADDFactor(output, swapped, new_scope);
+	}
+
+	bool ADDFactor::in_scope(const Variable *variable) const {
 		return (_scope.count(variable));
 	}
 
