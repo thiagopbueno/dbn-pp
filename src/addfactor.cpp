@@ -225,7 +225,8 @@ namespace dbn {
 
 
 	ostream &operator<<(ostream& os, const ADDFactor &f) {
-		os << "ADDFactor: " << f._output << "" << endl;
+		// os << "ADDFactor: " << f._output << "" << endl;
+		os << "ADDFactor: " << endl;
 		os << "partition = " << f.partition() << endl;
 		os << "scope {";
 		for (auto pf : f._scope) {
@@ -233,7 +234,7 @@ namespace dbn {
 		}
 		os << " }" << endl;
 		unsigned width = f._scope.size();
-		f._dd.print(width,3);
+		// f._dd.print(width,3);
 		int *cube;
 		CUDD_VALUE_TYPE value;
 		DdGen *gen = Cudd_FirstCube(ADDFactor::mgr.getManager(), f._dd.getNode(), &cube, &value);

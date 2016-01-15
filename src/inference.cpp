@@ -127,9 +127,7 @@ namespace dbn {
 
 	vector<shared_ptr<Factor>> filtering(
 		vector<shared_ptr<Factor>> &factors,
-		vector<unsigned> &prior,
-		unordered_map<unsigned,const Variable*> &transition,
-		vector<unsigned> &sensor,
+		vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor,
 		vector<unordered_map<unsigned,unsigned>> &observations) {
 
 		// estimates
@@ -152,7 +150,6 @@ namespace dbn {
 		forward = unique_ptr<Factor>(product(*forward, *prior_model));
 
 		for (auto evidence : observations) {
-
 			// project belief state
 			unique_ptr<Factor> projection = project(factors, transition, forward);
 
@@ -167,14 +164,166 @@ namespace dbn {
 	}
 
 
-	vector<shared_ptr<Factor>> unrolled_filtering(
-		vector<unique_ptr<Variable>> &variables,
-		vector<shared_ptr<Factor>> &factors,
-		vector<unsigned> &prior,
-		unordered_map<unsigned,const Variable*> &transition,
-		vector<unsigned> &sensor,
+	ADDFactor variable_elimination(
+		vector<const Variable*> &variables,
+		vector<shared_ptr<ADDFactor>> &factors) {
+
+	    forward_list<shared_ptr<ADDFactor>> flist(factors.begin(), factors.end());
+	    forward_list<shared_ptr<ADDFactor>> bucket;
+
+		for (auto var: variables) {
+
+			// select all factors with var in its scope
+			bucket.clear();
+			unsigned b = 0; // bucket size
+
+			forward_list<shared_ptr<ADDFactor>>::const_iterator pf;
+
+			forward_list<shared_ptr<ADDFactor>> new_flist;
+			for (pf = flist.begin(); pf != flist.end(); ++pf) {
+
+				if ((*pf)->in_scope(var)) {
+					bucket.push_front(*pf);
+					b++;
+				}
+				else {
+					new_flist.push_front(*pf);
+				}
+			}
+
+			flist = new_flist;
+
+			// multiply all factors in bucket and eliminate variable
+			if (b > 0) {
+				// unique_ptr<ADDFactor> prod(new ADDFactor);
+				// forward_list<shared_ptr<ADDFactor>>::const_iterator pf = bucket.begin();
+
+				// while (b > 1) {
+				// 	prod = unique_ptr<ADDFactor>(product(*prod, **pf));
+				// 	pf++;
+				// 	b--;
+				// }
+
+				// unique_ptr<Factor> p(sum_product(*prod, **pf, var));
+
+				ADDFactor prod;
+				for (auto const& f : bucket) {
+					prod *= *f;
+				}
+				shared_ptr<ADDFactor> p = make_shared<ADDFactor>(prod.sum_out(var));
+
+				new_flist.push_front(move(p));
+			}
+
+			flist = new_flist;
+		}
+
+		// generate result by multiplying all remaining factors in the pool
+		// unique_ptr<Factor> prod(new Factor(1.0));
+		// forward_list<shared_ptr<Factor>>::const_iterator pf;
+		// for (pf = flist.begin(); pf != flist.end(); ++pf) {
+		// 	prod = unique_ptr<Factor>(product(*prod, **pf));
+		// }
+
+		ADDFactor result;
+		for (auto &f : flist) {
+			result *= *f;
+		}
+
+		return result;
+	}
+
+	ADDFactor project(
+		vector<shared_ptr<ADDFactor>> &factors,
+		const unordered_map<unsigned,const Variable*> &transition,
+		const ADDFactor &forward) {
+
+		static vector<const Variable*> ordering;
+		static vector<shared_ptr<ADDFactor>> sum_prod_factors;
+
+		// static int n = 0;
+
+		if (ordering.size() == 0 && sum_prod_factors.size() == 0) {
+			for (auto it_transition : transition) {
+				unsigned id_prime = it_transition.first;
+				const Variable *variable = it_transition.second;
+				ordering.push_back(variable);
+				sum_prod_factors.push_back(factors[id_prime]);
+			}
+		}
+
+		sum_prod_factors.push_back(make_shared<ADDFactor>(forward));
+		ADDFactor projection = variable_elimination(ordering, sum_prod_factors);
+		// projection.dump_dot("projection_" + to_string(++n) + ".dot");
+		// cout << projection << endl;
+
+		projection = projection.change_variables(transition);
+		// projection.dump_dot("projection2_" + to_string(n) + ".dot");
+		// cout << projection << endl;
+
+		sum_prod_factors.pop_back();
+		return projection;
+	}
+
+	ADDFactor update(
+		const ADDFactor &projection,
+		const ADDFactor &sensor_model,
+		const unordered_map<unsigned,unsigned> &evidence) {
+
+		// add observation from time t
+		ADDFactor evidence_t = sensor_model.conditioning(evidence);
+
+		// update projection with observation
+		ADDFactor belief_state = evidence_t * projection;
+		return belief_state.normalize();
+	}
+
+	vector<shared_ptr<ADDFactor>>
+	filtering(
+		vector<shared_ptr<ADDFactor>> &factors,
+		vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor,
+		vector<unordered_map<unsigned,unsigned>> &observations)
+	{
+		// estimates
+		vector<shared_ptr<ADDFactor>> estimates;
+
+		// prior model
+		ADDFactor prior_model;
+		for (auto id : prior) {
+			prior_model *= *factors[id];
+		}
+
+		// sensor model
+		ADDFactor sensor_model;
+		for (auto id : sensor) {
+			sensor_model *= *factors[id];
+		}
+
+		// initialize forward message
+		ADDFactor forward = prior_model;
+
+		for (auto evidence : observations) {
+			// project belief state
+			ADDFactor projection = project(factors, transition, forward);
+
+			// update belief state
+			forward = update(projection, sensor_model, evidence);
+
+			// add new estimate to filtering list
+			estimates.push_back(make_shared<ADDFactor>(forward));
+		}
+
+		return estimates;
+	}
+
+
+	vector<shared_ptr<Factor>>
+	unrolled_filtering(
+		vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors,
+		vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor,
 		vector<unordered_map<unsigned,unsigned>> &observations,
-		bool verbose) {
+		bool verbose)
+	{
 
 		vector<shared_ptr<Factor>> estimates;
 

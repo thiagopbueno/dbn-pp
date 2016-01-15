@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
     cout << ">> MODEL: " << argv[1] << endl;
     print_model(variables, factors, prior, transition, sensor);
 
-    print_test_add(factors, variables);
+    // print_test_add(factors, variables);
 
     vector<unordered_map<unsigned,unsigned>> observations;
     set<unsigned> state_variables;
@@ -119,8 +119,14 @@ int main(int argc, char *argv[])
     vector<shared_ptr<Factor>> states = filtering(factors, prior, transition, sensor, observations);
     print_trajectory(states, state_variables);
 
-    cout << "Forward ADD filtering" << endl;
+    cout << "Forward ADD filtering:" << endl;
     vector<shared_ptr<ADDFactor>> states2 = filtering(addfactors, prior, transition, sensor, observations);
+    int t = 1;
+    for (auto pf : states2) {
+        cout << "@ t = " << t++ << endl;
+        cout << *pf << endl;
+    }
+    cout << endl;
 
     cout << "Unrolled filtering:" << endl;
     vector<shared_ptr<Factor>> states3 = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
