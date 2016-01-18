@@ -41,6 +41,8 @@ namespace dbn {
         const Variable *operator[](unsigned i) const;
         unsigned operator[](const Variable* v) const;
 
+        int index(const unsigned id);
+
         bool in_scope(const Variable* v) const;
         bool in_scope(unsigned id) const;
 

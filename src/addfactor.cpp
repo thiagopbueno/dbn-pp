@@ -32,7 +32,7 @@ namespace dbn {
 	ADDFactor::ADDFactor(const string &output, double value) :
 		_dd(mgr.constant(value)),
 		_output(output),
-		_domain(std::unique_ptr<Domain>(new Domain)) { }
+		_domain(unique_ptr<Domain>(new Domain)) { }
 			
 	ADDFactor::ADDFactor(const string &output, const Factor &factor) :
 		_output(output),
@@ -197,6 +197,34 @@ namespace dbn {
 		Domain domain(scope);
 		ADD conditioned = _dd.Restrict(evidenceVariables);
 		return ADDFactor(output, conditioned, domain);
+	}
+
+	double ADDFactor::operator[](vector<unsigned> instantiation) const {
+		DdNode *node = _dd.getNode();
+		if (Cudd_IsConstant(node)) return Cudd_V(node);
+
+		DdManager *mgr = ADDFactor::mgr.getManager();
+		int N = Cudd_ReadSize(mgr);
+
+		int *support;
+		Cudd_SupportIndices(mgr, _dd.getNode(), &support);
+
+		int *inputs = new int[N];
+		for (int id = 0; id < N; ++id) {
+			if (_domain->in_scope(id)) {
+				inputs[id] = instantiation[_domain->index(id)];
+			}
+			else {
+				inputs[id] = 2;
+			}
+		}
+		delete[] support;
+
+		DdNode *constant = Cudd_Eval(mgr, _dd.getNode(), inputs);
+		delete[] inputs;
+
+		CUDD_VALUE_TYPE value = Cudd_V(constant);
+		return value;
 	}
 
 	int ADDFactor::dump_dot(string filename) const {

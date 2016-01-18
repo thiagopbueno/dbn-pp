@@ -70,6 +70,11 @@ namespace dbn {
         else throw "Domain::operator[const Variable*]: Invalid argument!";
     }
 
+    int Domain::index(const unsigned id) {
+        return (in_scope(id) ?  _var_to_index[id] : -1);
+        // *_var_to_index.find(id)
+    }
+
     bool Domain::in_scope(const Variable* v) const {
         unordered_map<unsigned,unsigned>::const_iterator it = _var_to_index.find(v->id());
         return (it != _var_to_index.end());

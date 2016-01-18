@@ -25,7 +25,7 @@
 #include "cuddObj.hh"
 
 #include <iostream>
-#include <set>
+#include <vector>
 #include <unordered_map>
 
 namespace dbn {
@@ -53,6 +53,8 @@ namespace dbn {
 		ADDFactor product(const ADDFactor &f) const;
 		ADDFactor normalize() const;
 		ADDFactor conditioning(const std::unordered_map<unsigned,unsigned> &evidence) const;
+
+		double operator[](std::vector<unsigned> instantiation) const;
 
 		int dump_dot(std::string filename) const;
 		friend std::ostream &operator<<(std::ostream& o, const ADDFactor &f);
