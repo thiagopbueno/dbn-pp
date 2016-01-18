@@ -136,6 +136,8 @@ namespace dbn {
             unsigned id = domain[(unsigned)0]->id();
             string output = to_string(id);
             ADDFactor *addf = new ADDFactor(output, *f);
+            // cout << *addf << endl;
+            // addf->dump_dot(addf->output() + ".dot");
             addfactors.emplace_back(addf);
         }
     }

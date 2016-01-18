@@ -242,28 +242,61 @@ namespace dbn {
 
 
 	ostream &operator<<(ostream& os, const ADDFactor &f) {
+
+		const Domain &domain = f.domain();
+		int width = domain.width();
+		int size = domain.size();
+
 		// os << "ADDFactor: " << f._output << "" << endl;
-		os << "ADDFactor: " << endl;
-		os << "partition = " << f.partition() << endl;
-		os << "scope {";
-		for (auto pf : f.domain().scope()) {
-			os << " " << pf->id();
+		os << "Factor(";
+		os << "width = " << width << ", ";
+		os << "size = " << size << ", ";
+		os << "partition = " << f.partition() << ")" << endl;
+
+		// scope
+		for (auto pf : domain.scope()) {
+			os << pf->id() << " ";
 		}
-		os << " }" << endl;
-		unsigned width = f.domain().scope().size();
-		// f._dd.print(width,3);
-		int *cube;
-		CUDD_VALUE_TYPE value;
-		DdGen *gen = Cudd_FirstCube(ADDFactor::mgr.getManager(), f._dd.getNode(), &cube, &value);
-		while (!Cudd_IsGenEmpty(gen)) {
-			for (unsigned i = 0; i < width; i++) {
-				os << cube[i] << " ";
-			}
-			os << ": " << value << endl;
-			Cudd_NextCube(gen, &cube, &value);
-		}
-		Cudd_GenFree(gen);
 		os << endl;
+
+		// values
+		vector<unsigned> inst(width, 0);
+		for (int i = 0; i < size; ++i) {
+			for (int j = 0; j < width; ++j) {
+				os << inst[j] << " ";
+			}
+			os << ": " << f[inst] << endl;
+			domain.next_instantiation(inst);
+		}
+
+		// f._dd.print(width,3);
+
+		// DdManager *mgr = ADDFactor::mgr.getManager();
+
+		// int *support;
+		// int support_size = Cudd_SupportIndices(mgr, f._dd.getNode(), &support);
+		// cout << "support: {";
+		// for (int i = 0; i < support_size; ++i) {
+		// 	cout << " " << support[i];
+		// }
+		// cout << " }" << endl;
+		// delete[] support;
+
+		// int *cube;
+		// CUDD_VALUE_TYPE value;
+		// DdGen *gen = Cudd_FirstCube(mgr, f._dd.getNode(), &cube, &value);
+
+		// int N = Cudd_ReadSize(mgr);
+		// while (!Cudd_IsGenEmpty(gen)) {
+		// 	for (int i = 0; i < N; i++) {
+		// 		os << cube[i] << " ";
+		// 	}
+		// 	os << ": " << value << endl;
+		// 	Cudd_NextCube(gen, &cube, &value);
+		// }
+		// Cudd_GenFree(gen);
+		// os << endl;
+
 		return os;
 	}
 }
