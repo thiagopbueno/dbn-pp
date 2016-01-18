@@ -41,6 +41,8 @@ namespace dbn {
         const double &operator[](unsigned i) const;
         double &operator[](unsigned i);
 
+        double operator[](std::vector<unsigned> instantiation) const;
+
         void change_variables(std::unordered_map<unsigned,const Variable*> renaming);
 
         friend std::ostream &operator<<(std::ostream &o, const Factor &f);

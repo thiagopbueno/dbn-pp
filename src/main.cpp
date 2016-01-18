@@ -220,25 +220,23 @@ void print_trajectory(vector<shared_ptr<Factor>> &states, set<unsigned> &state_v
     cout.precision(3);
     cout << fixed;
 
-    std::vector<unsigned> instantiation(new_domain.width(), 0);
+    std::vector<unsigned> inst(new_domain.width(), 0);
     for (unsigned i = 0; i < new_domain.size(); ++i) {
 
-        unsigned pos = new_domain.position_instantiation(instantiation);
-
         // print instantiation
-        for (auto d : instantiation) {
+        for (auto d : inst) {
             cout << d << " ";
         }
         cout << ":";
 
         // print value trajectory
         for (auto const& pf : states) {
-            cout << " " << (*pf)[pos];
+            cout << " " << (*pf)[inst];
         }
         cout << endl;
 
         // update instantiation
-        new_domain.next_instantiation(instantiation);
+        new_domain.next_instantiation(inst);
     }
     cout << endl;
 }

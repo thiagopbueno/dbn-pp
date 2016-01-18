@@ -67,6 +67,11 @@ namespace dbn {
         else throw "Factor::operator[]: Index out of range.";
     }
 
+    double Factor::operator[](std::vector<unsigned> inst) const {
+        unsigned pos = _domain->position_instantiation(inst);
+        return _values[pos];
+    }
+
     void Factor::change_variables(std::unordered_map<unsigned,const Variable*> renaming) {
         _domain->modify_scope(renaming);
     }
