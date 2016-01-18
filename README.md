@@ -2,16 +2,21 @@
 
 Data structures and algorithms in C++ for **probabilistic modeling and inference** in (discrete-time) finite-state Dynamic Bayesian Networks (DBNs).
 
-Currently supported inference routines:
+Currently supported inference tasks: filtering.
 
-* Variable elimination in unrolled network (filtering)
-* Forward algorithm (filtering)
+Algorithms implemented in this version:
+
+* Variable elimination in unrolled network
+* Forward algorithm
+* Forward algorithm with ADD (Algebraic Decision Diagrams)
 
 The overall structure used for variable, factor and domain representation is highly inspired by the [kpu-pp project](https://github.com/denismaua/kpu-pp).
 
 Inputs are accepted in the format .duai (uai extended model for dynamic nets). See below for more details.
 
 ## Installation
+
+Follow the instructions to [install CUDD package]($ http://vlsi.colorado.edu/~fabio/CUDD/cudd.pdf) in your platform and set the CUDD variable in Makefile to point to your library's installation location. Then enter the following comands in your prompt.
 
 ```
 $ git clone https://github.com/thiagopbueno/dbn.git
