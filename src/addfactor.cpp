@@ -245,6 +245,7 @@ namespace dbn {
 
 		// os << "ADDFactor: " << f._output << "" << endl;
 		os << "Factor(";
+		os << "output = " << f._output << ", ";
 		os << "width = " << width << ", ";
 		os << "size = " << size << ", ";
 		os << "partition = " << f.partition() << ")" << endl;
