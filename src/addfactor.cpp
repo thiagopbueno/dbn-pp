@@ -99,15 +99,14 @@ namespace dbn {
 	}
 
 	double ADDFactor::partition() const {
+		int width = _domain->width();
+		int size = _domain->size();
+		vector<unsigned> inst(width, 0);
 		double partition = 0;
-		int *cube;
-		CUDD_VALUE_TYPE value;
-		DdGen *gen = Cudd_FirstCube(mgr.getManager(), _dd.getNode(), &cube, &value);
-		while (!Cudd_IsGenEmpty(gen)) {
-			partition += value;
-			Cudd_NextCube(gen, &cube, &value);
+		for (int i = 0; i < size; ++i) {
+			partition += (*this)[inst];
+			_domain->next_instantiation(inst);
 		}
-		Cudd_GenFree(gen);
 		return partition;
 	}
 
