@@ -206,9 +206,6 @@ namespace dbn {
 		DdManager *mgr = ADDFactor::mgr.getManager();
 		int N = Cudd_ReadSize(mgr);
 
-		int *support;
-		Cudd_SupportIndices(mgr, _dd.getNode(), &support);
-
 		int *inputs = new int[N];
 		for (int id = 0; id < N; ++id) {
 			if (_domain->in_scope(id)) {
@@ -218,7 +215,6 @@ namespace dbn {
 				inputs[id] = 2;
 			}
 		}
-		delete[] support;
 
 		DdNode *constant = Cudd_Eval(mgr, _dd.getNode(), inputs);
 		delete[] inputs;
