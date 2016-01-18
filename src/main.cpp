@@ -17,7 +17,6 @@
 // along with DBN.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "io.h"
-#include "operations.h"
 #include "inference.h"
 
 #include "stdio.h"

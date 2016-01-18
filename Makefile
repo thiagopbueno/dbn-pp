@@ -1,8 +1,8 @@
 CC=g++
 CCFLAGS=-Wall -Wextra -ansi -pedantic -std=c++11
 
-OBJ=bin/variable.o bin/domain.o bin/factor.o bin/io.o bin/operations.o bin/inference.o bin/addfactor.o bin/main.o
-OBJDEBUG=debug/variable.o debug/domain.o debug/factor.o debug/io.o debug/operations.o debug/inference.o debug/addfactor.o debug/main.o
+OBJ=bin/variable.o bin/domain.o bin/factor.o bin/addfactor.o bin/io.o bin/inference.o bin/main.o
+OBJDEBUG=debug/variable.o debug/domain.o debug/factor.o debug/addfactor.o debug/io.o debug/inference.o debug/main.o
 
 CUDD=/usr/local/CUDD/cudd-3.0.0
 

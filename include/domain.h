@@ -33,6 +33,9 @@ namespace dbn {
         Domain(std::vector<const Variable*> scope);
         Domain(const Domain &domain);
         Domain(const Domain &domain, const std::unordered_map<unsigned,unsigned> &evidence);
+        Domain(const Domain &d1, const Domain &d2);
+
+        // Domain &operator=(const Domain &other);
 
         unsigned width() const { return _width; };
         unsigned size()  const { return _size;  };

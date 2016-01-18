@@ -27,34 +27,27 @@ namespace dbn {
     Factor::Factor(Domain *domain) :
         _domain(std::unique_ptr<Domain>(domain)),
         _values(std::vector<double>(domain->size())),
-        _partition(0) {}
+        _partition(0) { }
 
     Factor::Factor(Domain *domain, double value) :
         _domain(std::unique_ptr<Domain>(domain)),
         _values(std::vector<double>(domain->size(), value)),
-        _partition(domain->size() * value) {}
+        _partition(domain->size() * value) { }
 
     Factor::Factor(double value) :
         _domain(std::unique_ptr<Domain>(new Domain)),
         _values(std::vector<double>(1, value)),
-        _partition(value) {}
+        _partition(value) { }
 
-    Factor::Factor(const Factor &f, bool normalization) :
+    Factor::Factor(const Factor &f) :
         _domain(unique_ptr<Domain>(new Domain(f.domain()))),
-        _values(vector<double>(f.size())) {
-        unsigned sz = f.size();
-        if (normalization) {
-            for (unsigned i = 0; i < sz; ++i) {
-                _values[i] = f._values[i]/f._partition;
-            }
-            _partition = 1.0;
-        }
-        else {
-            for (unsigned i = 0; i < sz; ++i) {
-                _values[i] = f._values[i];
-            }
-            _partition = f._partition;
-        }
+        _values(f._values),
+        _partition(f._partition) { }
+
+    Factor::Factor(Factor &&f) {
+        _domain = move(f._domain);
+        _values = f._values;
+        _partition = f._partition;
     }
 
     Factor &Factor::operator=(Factor &&f) {
@@ -66,6 +59,14 @@ namespace dbn {
             f._partition = 0.0;
         }
         return *this;
+    }
+
+    Factor Factor::operator*(const Factor &f) {
+        return product(f);
+    }
+
+    void Factor::operator*=(const Factor &f) {
+        *this = product(f);
     }
 
     const double &Factor::operator[](unsigned i) const {
@@ -119,6 +120,74 @@ namespace dbn {
 
             return new_factor;
         }
+    }
+
+    Factor Factor::product(const Factor &f) const {
+        const Domain &d1 = this->domain();
+        const Domain &d2 = f.domain();
+
+        Domain *new_domain = new Domain(d1, d2);
+        unsigned width = new_domain->width();
+        unsigned size = new_domain->size();
+        Factor new_factor(new_domain, 0.0);
+
+        vector<unsigned> inst(width, 0);
+        double partition = 0;
+        for (unsigned i = 0; i < size; ++i) {
+            // find position in linearization of consistent instantiation
+            unsigned pos1 = d1.position_consistent_instantiation(inst, *new_domain);
+            unsigned pos2 = d2.position_consistent_instantiation(inst, *new_domain);
+
+            // set product factor value
+            double value = (*this)[pos1] * f[pos2];
+            new_factor[i] = value;
+            partition += value;
+
+            // find next instantiation
+            new_domain->next_instantiation(inst);
+        }
+        new_factor.partition() = partition;
+        return new_factor;
+    }
+
+    Factor Factor::normalize() const {
+        Factor new_factor(*this);
+
+        unsigned sz = new_factor.size();
+        for (unsigned i = 0; i < sz; ++i) {
+            new_factor._values[i] = new_factor._values[i]/new_factor._partition;
+        }
+        new_factor._partition = 1.0;
+
+        return new_factor;
+    }
+
+    Factor Factor::conditioning(const std::unordered_map<unsigned,unsigned> &evidence) const {
+        const Domain &d = domain();
+        unsigned width = d.width();
+
+        Factor new_factor(new Domain(d, evidence));
+
+        // incorporate evidence in instantiation
+        vector<unsigned> instantiation(width, 0);
+        d.update_instantiation_with_evidence(instantiation, evidence);
+
+        double partition = 0;
+        unsigned new_factor_size = new_factor.size();
+        for (unsigned i = 0; i < new_factor_size; ++i) {
+
+            // update new factor
+            unsigned pos = d.position_instantiation(instantiation);
+            double value = (*this)[pos];
+            new_factor[i] = value;
+            partition += value;
+
+            // find next instantiation
+            d.next_instantiation(instantiation, evidence);
+        }
+        new_factor.partition() = partition;
+
+        return new_factor;
     }
 
     void Factor::change_variables(std::unordered_map<unsigned,const Variable*> renaming) {

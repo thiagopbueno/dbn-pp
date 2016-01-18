@@ -57,7 +57,37 @@ namespace dbn {
         }
     }
 
+    Domain::Domain(const Domain &d1, const Domain &d2) {
+        _scope = d1._scope;
+        unsigned width2 = d2._width;
+        for (unsigned i = 0; i < width2; ++i) {
+            const Variable *v = d2[i];
+            if (!d1.in_scope(v)) {
+                _scope.push_back(v);
+            }
+        }
+        _width = _scope.size();
+        _size = 1;
+        if (_width > 0) {
+            _offset.reserve(_width);
+            for (int i = _width-1; i >= 0; --i) {
+                _offset[i] = _size;
+                _size *= _scope[i]->size();
+                _var_to_index[_scope[i]->id()] = i;
+            }
+        }
+    }
 
+    // Domain &Domain::operator=(const Domain &other) {
+    //     if (this != &other) {
+    //         _scope = other._scope;
+    //         _offset = other._offset;
+    //         _width = other._width;
+    //         _size = other._size;
+    //         _var_to_index = other._var_to_index;
+    //     }
+    //     return *this;
+    // }
 
     const Variable *Domain::operator[](unsigned i) const {
         if (i < _width) return _scope[i];

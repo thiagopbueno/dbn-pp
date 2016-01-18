@@ -17,7 +17,6 @@
 // along with DBN.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "inference.h"
-#include "operations.h"
 
 #include <forward_list>
 #include <iostream>
@@ -26,7 +25,7 @@ using namespace std;
 
 namespace dbn {
 
-	unique_ptr<Factor> variable_elimination(
+	Factor variable_elimination(
 		vector<const Variable*> &variables,
 		vector<shared_ptr<Factor>> &factors) {
 
@@ -57,16 +56,25 @@ namespace dbn {
 
 			// multiply all factors in bucket and eliminate variable
 			if (b > 0) {
-				unique_ptr<Factor> prod(new Factor(1.0));
-				forward_list<shared_ptr<Factor>>::const_iterator pf = bucket.begin();
+				// unique_ptr<Factor> prod(new Factor(1.0));
+				// Factor prod(1.0);
+				// forward_list<shared_ptr<Factor>>::const_iterator pf = bucket.begin();
 
-				while (b > 1) {
-					prod = unique_ptr<Factor>(product(*prod, **pf));
-					pf++;
-					b--;
+				// while (b > 1) {
+				// 	// prod = unique_ptr<Factor>(product(*prod, **pf));
+				// 	// prod = unique_ptr<Factor>(*prod * **pf);
+				// 	prod = prod * **pf;
+				// 	pf++;
+				// 	b--;
+				// }
+
+				// unique_ptr<Factor> p(sum_product(prod, **pf, var));
+
+				Factor prod;
+				for (auto const& f : bucket) {
+					prod *= *f;
 				}
-
-				unique_ptr<Factor> p(sum_product(*prod, **pf, var));
+				shared_ptr<Factor> p = make_shared<Factor>(prod.sum_out(var));
 
 				new_flist.push_front(move(p));
 	  		}
@@ -75,19 +83,22 @@ namespace dbn {
 		}
 
 		// generate result by multiplying all remaining factors in the pool
-		unique_ptr<Factor> prod(new Factor(1.0));
+		// unique_ptr<Factor> prod(new Factor(1.0));
+		Factor prod(1.0);
 		forward_list<shared_ptr<Factor>>::const_iterator pf;
 		for (pf = flist.begin(); pf != flist.end(); ++pf) {
-			prod = unique_ptr<Factor>(product(*prod, **pf));
+			// prod = unique_ptr<Factor>(product(*prod, **pf));
+			// prod = unique_ptr<Factor>(*prod * **pf);
+			prod = prod * **pf;
 		}
 
 		return prod;
 	}
 
-	unique_ptr<Factor> project(
+	Factor project(
 		vector<shared_ptr<Factor>> &factors,
 		const unordered_map<unsigned,const Variable*> &transition,
-		const shared_ptr<Factor> &forward) {
+		const Factor &forward) {
 
 		static vector<const Variable*> ordering;
 		static vector<shared_ptr<Factor>> sum_prod_factors;
@@ -102,27 +113,28 @@ namespace dbn {
 		}
 
 		// variable elimination
-		sum_prod_factors.push_back(forward);
-		unique_ptr<Factor> projection = variable_elimination(ordering, sum_prod_factors);
-		projection->change_variables(transition);
+		sum_prod_factors.push_back(make_shared<Factor>(forward));
+		Factor projection = variable_elimination(ordering, sum_prod_factors);
+		projection.change_variables(transition);
 		sum_prod_factors.pop_back();
 
-		return move(projection);
+		return projection;
 	}
 
-	unique_ptr<Factor> update(
+	Factor update(
 		const Factor &projection,
 		const Factor &sensor_model,
 		const unordered_map<unsigned,unsigned> &evidence) {
 
 		// add observation from time t
-		unique_ptr<Factor> evidence_t = unique_ptr<Factor>(conditioning(sensor_model, evidence));
+		Factor evidence_t = sensor_model.conditioning(evidence);
 
 		// update projection with observation
-		unique_ptr<Factor> belief_state = unique_ptr<Factor>(product(*evidence_t, projection));
-		belief_state = unique_ptr<Factor>(normalization(*belief_state));
+		Factor belief_state = evidence_t * projection;
+		// belief_state = normalization(*belief_state));
 
-		return move(belief_state);
+		// return move(belief_state);
+		return belief_state.normalize();
 	}
 
 	vector<shared_ptr<Factor>> filtering(
@@ -134,30 +146,29 @@ namespace dbn {
 		vector<shared_ptr<Factor>> estimates;
 
 		// prior model
-		unique_ptr<Factor> prior_model = unique_ptr<Factor>(new Factor(1.0));
+		Factor prior_model(1.0);
 		for (auto id : prior) {
-			prior_model = unique_ptr<Factor>(product(*prior_model, *factors[id]));
+			prior_model = prior_model * *(factors[id]);
 		}
 
 		// sensor model
-		unique_ptr<Factor> sensor_model = unique_ptr<Factor>(new Factor(1.0));
+		Factor sensor_model(1.0);
 		for (auto id : sensor) {
-			sensor_model = unique_ptr<Factor>(product(*sensor_model, *factors[id]));
+			sensor_model = sensor_model * *(factors[id]);
 		}
 
 		// initialize forward message
-		shared_ptr<Factor> forward = make_shared<Factor>(1.0);
-		forward = unique_ptr<Factor>(product(*forward, *prior_model));
+		Factor forward = prior_model;
 
 		for (auto evidence : observations) {
 			// project belief state
-			unique_ptr<Factor> projection = project(factors, transition, forward);
+			Factor projection = project(factors, transition, forward);
 
 			// update belief state
-			forward = update(*projection, *sensor_model, evidence);
+			forward = update(projection, sensor_model, evidence);
 
 			// add new estimate to filtering list
-			estimates.push_back(forward);
+			estimates.push_back(make_shared<Factor>(forward));
 		}
 
 		return estimates;
@@ -352,12 +363,10 @@ namespace dbn {
 		}
 
 		for (auto sensor_id : sensor) {
-			factors[sensor_id]->change_variables(renaming);
-
-			unique_ptr<Factor> new_factor = unique_ptr<Factor>(conditioning(*factors[sensor_id], observations[0]));
-			new_factor = unique_ptr<Factor>(normalization(*new_factor));
-
-			unrolled_factors.push_back(move(new_factor));
+			Factor *sensor_factor = factors[sensor_id].get();
+			sensor_factor->change_variables(renaming);
+			Factor new_factor = sensor_factor->conditioning(observations[0]).normalize();
+			unrolled_factors.push_back(make_shared<Factor>(new_factor));
 		}
 
 		if (verbose) {
@@ -377,9 +386,9 @@ namespace dbn {
 			cout << endl;
 		}
 
-		Factor *estimate = normalization(*variable_elimination(ordering, unrolled_factors));
+		Factor estimate = variable_elimination(ordering, unrolled_factors).normalize();
 		unordered_map<unsigned,const Variable *> renaming_back;
-		const Domain &estimate_domain = estimate->domain();
+		const Domain &estimate_domain = estimate.domain();
 		for (unsigned i = 0; i < estimate_domain.width(); ++i) {
 			unsigned var_id = estimate_domain[i]->id();
 			for (auto it_renaming : renaming) {
@@ -390,8 +399,8 @@ namespace dbn {
 				}
 			}
 		}
-		estimate->change_variables(renaming_back);
-		estimates.emplace_back(estimate);
+		estimate.change_variables(renaming_back);
+		estimates.push_back(make_shared<Factor>(estimate));
 
 		unsigned id = factors.size();
 		for (unsigned t = 1; t < observations.size(); ++t) {
@@ -433,11 +442,10 @@ namespace dbn {
 				variables.push_back(move(new_var));
 				id++;
 
-				unique_ptr<Factor> new_factor = unique_ptr<Factor>(conditioning(*factors[sensor_id], observations[t]));
-				new_factor = unique_ptr<Factor>(normalization(*new_factor));
-				new_factor->change_variables(renaming);
-
-				unrolled_factors.push_back(move(new_factor));
+				Factor *sensor_factor = factors[sensor_id].get();
+				Factor new_factor = sensor_factor->conditioning(observations[t]).normalize();
+				new_factor.change_variables(renaming);
+				unrolled_factors.push_back(make_shared<Factor>(new_factor));
 			}
 
 			if (verbose) {
@@ -452,9 +460,9 @@ namespace dbn {
 				cout << endl;
 			}
 
-			Factor *estimate = normalization(*variable_elimination(ordering, unrolled_factors));
+			Factor estimate = variable_elimination(ordering, unrolled_factors).normalize();
 			unordered_map<unsigned,const Variable *> renaming_back;
-			const Domain &estimate_domain = estimate->domain();
+			const Domain &estimate_domain = estimate.domain();
 			for (unsigned i = 0; i < estimate_domain.width(); ++i) {
 				unsigned var_id = estimate_domain[i]->id();
 				for (auto it_renaming : renaming) {
@@ -465,8 +473,8 @@ namespace dbn {
 					}
 				}
 			}
-			estimate->change_variables(renaming_back);
-			estimates.emplace_back(estimate);
+			estimate.change_variables(renaming_back);
+			estimates.push_back(make_shared<Factor>(estimate));
 		}
 
 		return estimates;
