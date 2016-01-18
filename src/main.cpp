@@ -37,50 +37,10 @@ void print_model(
     vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor
 );
 
-
 void print_observations(vector<unordered_map<unsigned,unsigned>> &observations);
 
 template<class T>
 void print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables);
-
-void print_test_add(vector<shared_ptr<Factor>> &factors, vector<unique_ptr<Variable>> &variables)
-{
-    ADDFactor distribution;
-
-    for (auto &f : factors) {
-        const Domain &domain = f->domain();
-        unsigned id = domain[(unsigned)0]->id();
-
-        string output = to_string(id);
-        ADDFactor addf(output, *f);
-        cout << addf << endl;
-
-        // addf = addf.sum_out(variables[0].get());
-        // cout << addf << endl;
-
-        // addf = addf.normalize();
-        // cout << addf << endl;
-
-        // string filename = addf.output() + ".dot";
-        // addf.dump_dot(filename);
-
-        // distribution = distribution.product(addf);
-        // distribution = distribution * addf;
-        distribution *= addf;
-    }
-
-    string filename = "distribution.dot";
-    distribution.dump_dot(filename);
-    cout << distribution << endl;
-
-    unordered_map<unsigned, unsigned> evidence;
-    evidence[2] = 0;
-    evidence[3] = 0;
-    distribution = distribution.conditioning(evidence);
-    distribution = distribution.sum_out(variables[0].get());
-    distribution = distribution.normalize();
-    cout << distribution << endl;
-}
 
 void usage(const char *filename)
 {
@@ -106,8 +66,6 @@ int main(int argc, char *argv[])
     if (read_uai_model(argv[1], order, variables, factors, addfactors, prior, transition, sensor)) return -1;
     cout << ">> MODEL: " << argv[1] << endl;
     print_model(variables, factors, prior, transition, sensor);
-
-    // print_test_add(factors, variables);
 
     vector<unordered_map<unsigned,unsigned>> observations;
     set<unsigned> state_variables;
