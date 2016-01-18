@@ -16,12 +16,13 @@ Inputs are accepted in the format .duai (uai extended model for dynamic nets). S
 
 ## Installation
 
-Follow the instructions to [install CUDD package]($ http://vlsi.colorado.edu/~fabio/CUDD/cudd.pdf) in your platform and set the CUDD variable in Makefile to point to your library's installation location. Then enter the following comands in your prompt.
+Follow the instructions to [install CUDD package](http://vlsi.colorado.edu/~fabio/CUDD/cudd.pdf) in your platform and set the CUDD variable in Makefile to point to your library's installation location. Then enter the following comands in your prompt.
 
 ```
 $ git clone https://github.com/thiagopbueno/dbn.git
 $ make install
 $ make
+$ ./dbn
 ```
 
 ## Usage
