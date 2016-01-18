@@ -57,6 +57,17 @@ namespace dbn {
         }
     }
 
+    Factor &Factor::operator=(Factor &&f) {
+        if (this != &f) {
+            _domain = move(f._domain);
+            _values = f._values;
+            _partition = f._partition;
+            f._values.clear();
+            f._partition = 0.0;
+        }
+        return *this;
+    }
+
     const double &Factor::operator[](unsigned i) const {
         if (i < size()) return _values[i];
         else throw "Factor::operator[]: Index out of range.";
@@ -70,6 +81,44 @@ namespace dbn {
     double Factor::operator[](std::vector<unsigned> inst) const {
         unsigned pos = _domain->position_instantiation(inst);
         return _values[pos];
+    }
+
+    bool Factor::in_scope(const Variable *variable) const {
+        return (_domain->in_scope(variable));
+    }
+
+    Factor Factor::sum_out(const Variable *variable) const {
+        if (!in_scope(variable)) {
+            Factor new_factor(*this);
+            return new_factor;
+        }
+        else {
+            vector<const Variable*> scope = _domain->scope();
+            scope.erase(scope.begin() + _domain->index(variable->id()));
+
+            Domain *new_domain = new Domain(scope);
+            Factor new_factor(new_domain, 0.0);
+
+            unsigned factor_size = new_factor.size();
+            unsigned variable_size = variable->size();
+
+            double partition = 0;
+
+            vector<unsigned> inst(new_factor.width(), 0);
+            for (unsigned i = 0; i < factor_size; ++i) {
+                for (unsigned val = 0; val < variable_size; ++val) {
+                    // unsigned pos = new_domain->position_consistent_instantiation(inst, *_domain, variable, val);
+                    unsigned pos = _domain->position_consistent_instantiation(inst, *new_domain, variable, val);
+                    double value = (*this)[pos];
+                    new_factor[i] += value;
+                    partition += value;
+                }
+                new_domain->next_instantiation(inst);
+            }
+            new_factor.partition() = partition;
+
+            return new_factor;
+        }
     }
 
     void Factor::change_variables(std::unordered_map<unsigned,const Variable*> renaming) {

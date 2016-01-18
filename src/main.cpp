@@ -38,9 +38,11 @@ void print_model(
     vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor
 );
 
+
 void print_observations(vector<unordered_map<unsigned,unsigned>> &observations);
 
-void print_trajectory(vector<shared_ptr<Factor>> &states, set<unsigned> &state_variables);
+template<class T>
+void print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables);
 
 void print_test_add(vector<shared_ptr<Factor>> &factors, vector<unique_ptr<Variable>> &variables)
 {
@@ -117,20 +119,15 @@ int main(int argc, char *argv[])
 
     cout << "Forward filtering:" << endl;
     vector<shared_ptr<Factor>> states = filtering(factors, prior, transition, sensor, observations);
-    print_trajectory(states, state_variables);
+    print_trajectory<Factor>(states, state_variables);
 
     cout << "Forward ADD filtering:" << endl;
     vector<shared_ptr<ADDFactor>> states2 = filtering(addfactors, prior, transition, sensor, observations);
-    int t = 1;
-    for (auto pf : states2) {
-        cout << "@ t = " << t++ << endl;
-        cout << *pf << endl;
-    }
-    cout << endl;
+    print_trajectory<ADDFactor>(states2, state_variables);
 
     cout << "Unrolled filtering:" << endl;
     vector<shared_ptr<Factor>> states3 = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
-    print_trajectory(states3, state_variables);
+    print_trajectory<Factor>(states3, state_variables);
 
     return 0;
 }
@@ -192,22 +189,22 @@ void print_observations(vector<unordered_map<unsigned,unsigned>> &observations) 
     cout << endl;
 }
 
-void print_trajectory(vector<shared_ptr<Factor>> &states, set<unsigned> &state_variables) {
+template<class T>
+void print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables) {
 
-    // project factors over state variables
-    const Domain &domain = states[0]->domain();
-    vector<const Variable*> ordering;
-    for (unsigned i = 0; i < domain.width(); ++i) {
-        const Variable *v = domain[i];
-        if (state_variables.find(v->id()) == state_variables.end()) {
-            ordering.push_back(v);
+    unsigned timeslices = states.size();
+    for (unsigned i = 0; i < timeslices; ++i) {
+        T f = *(states[i]);
+
+        const Domain &domain = states[i]->domain();
+        unsigned width = domain.width();
+        for (unsigned j = 0; j < width; ++j) {
+            const Variable *v = domain[j];
+            if (state_variables.find(v->id()) == state_variables.end()) {
+                f = f.sum_out(v);
+            }
         }
-    }
-    vector<shared_ptr<Factor>> factors;
-    for (unsigned i = 0; i < states.size(); ++i) {
-        factors.clear();
-        factors.push_back(states[i]);
-        states[i] = variable_elimination(ordering, factors);
+        states[i] = make_shared<T>(f);
     }
 
     cout << "=== Trajectory ===" << endl;

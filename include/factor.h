@@ -30,8 +30,10 @@ namespace dbn {
     public:
         Factor(Domain *domain);
         Factor(Domain *domain, double value);
-        Factor(double value);
+        Factor(double value = 1.0);
         Factor(const Factor &f, bool normalization = false);
+
+        Factor &operator=(Factor &&f);
 
         const Domain &domain() const { return *_domain; };
         unsigned size()  const { return _domain->size();  };
@@ -42,6 +44,10 @@ namespace dbn {
         double &operator[](unsigned i);
 
         double operator[](std::vector<unsigned> instantiation) const;
+
+        bool in_scope(const Variable *variable) const;
+
+        Factor sum_out(const Variable *variable) const;
 
         void change_variables(std::unordered_map<unsigned,const Variable*> renaming);
 

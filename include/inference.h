@@ -28,11 +28,6 @@
 
 namespace dbn {
 
-	std::unique_ptr<Factor> variable_elimination(
-		std::vector<const Variable*> &variables,
-		std::vector<std::shared_ptr<Factor>> &factors
-	);
-
 	std::vector<std::shared_ptr<Factor>> unrolled_filtering(
 		std::vector<std::unique_ptr<Variable>> &variables,
 		std::vector<std::shared_ptr<Factor>> &factors,
