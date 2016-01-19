@@ -56,21 +56,7 @@ namespace dbn {
 
 			// multiply all factors in bucket and eliminate variable
 			if (b > 0) {
-				// unique_ptr<Factor> prod(new Factor(1.0));
-				// Factor prod(1.0);
-				// forward_list<shared_ptr<Factor>>::const_iterator pf = bucket.begin();
-
-				// while (b > 1) {
-				// 	// prod = unique_ptr<Factor>(product(*prod, **pf));
-				// 	// prod = unique_ptr<Factor>(*prod * **pf);
-				// 	prod = prod * **pf;
-				// 	pf++;
-				// 	b--;
-				// }
-
-				// unique_ptr<Factor> p(sum_product(prod, **pf, var));
-
-				Factor prod;
+				Factor prod(1.0);
 				for (auto const& f : bucket) {
 					prod *= *f;
 				}
@@ -83,16 +69,12 @@ namespace dbn {
 		}
 
 		// generate result by multiplying all remaining factors in the pool
-		// unique_ptr<Factor> prod(new Factor(1.0));
-		Factor prod(1.0);
-		forward_list<shared_ptr<Factor>>::const_iterator pf;
-		for (pf = flist.begin(); pf != flist.end(); ++pf) {
-			// prod = unique_ptr<Factor>(product(*prod, **pf));
-			// prod = unique_ptr<Factor>(*prod * **pf);
-			prod = prod * **pf;
+		Factor result(1.0);
+		for (auto &f : flist) {
+			result *= *f;
 		}
 
-		return prod;
+		return result;
 	}
 
 	Factor project(
@@ -131,7 +113,6 @@ namespace dbn {
 
 		// update projection with observation
 		Factor belief_state = evidence_t * projection;
-		// belief_state = normalization(*belief_state));
 
 		// return move(belief_state);
 		return belief_state.normalize();
@@ -206,17 +187,6 @@ namespace dbn {
 
 			// multiply all factors in bucket and eliminate variable
 			if (b > 0) {
-				// unique_ptr<ADDFactor> prod(new ADDFactor);
-				// forward_list<shared_ptr<ADDFactor>>::const_iterator pf = bucket.begin();
-
-				// while (b > 1) {
-				// 	prod = unique_ptr<ADDFactor>(product(*prod, **pf));
-				// 	pf++;
-				// 	b--;
-				// }
-
-				// unique_ptr<Factor> p(sum_product(*prod, **pf, var));
-
 				ADDFactor prod;
 				for (auto const& f : bucket) {
 					prod *= *f;
@@ -230,12 +200,6 @@ namespace dbn {
 		}
 
 		// generate result by multiplying all remaining factors in the pool
-		// unique_ptr<Factor> prod(new Factor(1.0));
-		// forward_list<shared_ptr<Factor>>::const_iterator pf;
-		// for (pf = flist.begin(); pf != flist.end(); ++pf) {
-		// 	prod = unique_ptr<Factor>(product(*prod, **pf));
-		// }
-
 		ADDFactor result;
 		for (auto &f : flist) {
 			result *= *f;
@@ -252,8 +216,6 @@ namespace dbn {
 		static vector<const Variable*> ordering;
 		static vector<shared_ptr<ADDFactor>> sum_prod_factors;
 
-		// static int n = 0;
-
 		if (ordering.size() == 0 && sum_prod_factors.size() == 0) {
 			for (auto it_transition : transition) {
 				unsigned id_prime = it_transition.first;
@@ -265,13 +227,7 @@ namespace dbn {
 
 		sum_prod_factors.push_back(make_shared<ADDFactor>(forward));
 		ADDFactor projection = variable_elimination(ordering, sum_prod_factors);
-		// projection.dump_dot("projection_" + to_string(++n) + ".dot");
-		// cout << projection << endl;
-
 		projection = projection.change_variables(transition);
-		// projection.dump_dot("projection2_" + to_string(n) + ".dot");
-		// cout << projection << endl;
-
 		sum_prod_factors.pop_back();
 		return projection;
 	}
@@ -355,7 +311,6 @@ namespace dbn {
 		vector<shared_ptr<Factor>> unrolled_factors;
 		for (auto prior_id : prior) {
 			unrolled_factors.push_back(factors[prior_id]);
-			// ordering.push_back(vars[prior_id]);
 		}
 		for (auto it_transition : transition) {
 			unsigned id_next = it_transition.first;
@@ -429,7 +384,6 @@ namespace dbn {
 
 				unrolled_factors.emplace_back(new_factor);
 				ordering.push_back(renaming[id_curr]);
-				// renaming[id_curr] = renaming[id_next];
 			}
 
 			for (auto it_transition : transition) {
