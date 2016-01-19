@@ -159,15 +159,36 @@ Variable(id:2, size:2)
 Variable(id:3, size:2)
 
 === Factors ===
-Factor(Domain{0}, size:2, partition:1, values:[0.300, 0.700])
-Factor(Domain{1, 0}, size:4, partition:2, values:[0.700, 0.200, 0.300, 0.800])
-Factor(Domain{2, 0}, size:4, partition:2, values:[0.300, 0.800, 0.700, 0.200])
-Factor(Domain{3, 0}, size:4, partition:2, values:[0.700, 0.900, 0.300, 0.100])
+Factor(width = 1, size = 2, partition = 1)
+0
+0 : 0.3
+1 : 0.7
+
+Factor(width = 2, size = 4, partition = 2)
+1 0
+0 0 : 0.7
+0 1 : 0.2
+1 0 : 0.3
+1 1 : 0.8
+
+Factor(width = 2, size = 4, partition = 2)
+2 0
+0 0 : 0.3
+0 1 : 0.8
+1 0 : 0.7
+1 1 : 0.2
+
+Factor(width = 2, size = 4, partition = 2)
+3 0
+0 0 : 0.7
+0 1 : 0.9
+1 0 : 0.3
+1 1 : 0.1
 
 === Prior model ===
 Variables { 0 }
 
-=== Transition model ===
+=== 2TBN ===
 Variables { 1->0 }
 
 === Sensor model ===
@@ -178,18 +199,44 @@ Variables { 2 3 }
 @t = 1 { 3:0 2:0 }
 @t = 2 { 3:0 2:1 }
 @t = 3 { 3:1 2:1 }
+@t = 4 { 3:0 2:0 }
+@t = 5 { 3:0 2:0 }
+@t = 6 { 3:0 2:1 }
+@t = 7 { 3:1 2:0 }
 
+@ Unrolled filtering: total time = 0.800 ms, time per slice = 0.114 ms.
 === Trajectory ===
 0
-0 : 0.136 0.499 0.896
-1 : 0.864 0.501 0.104
+0 : 0.136 0.499 0.896 0.349 0.149 0.507 0.483
+1 : 0.864 0.501 0.104 0.651 0.851 0.493 0.517
+
+@ Forward filtering: total time = 0.237 ms, time per slice = 0.034 ms.
+=== Trajectory ===
+0
+0 : 0.136 0.499 0.896 0.349 0.149 0.507 0.483
+1 : 0.864 0.501 0.104 0.651 0.851 0.493 0.517
+
+@ Forward ADD filtering: total time = 0.425 ms, time per slice = 0.061 ms.
+=== Trajectory ===
+0
+0 : 0.136 0.499 0.896 0.349 0.149 0.507 0.483
+1 : 0.864 0.501 0.104 0.651 0.851 0.493 0.517
 ```
 
 ## LICENSE
 
-Copyright (c) 2015 Thiago Pereira Bueno
+Copyright (c) 2015-2016 Thiago Pereira Bueno
 All Rights Reserved.
 
-DBN is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+DBN is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-DBN is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+DBN is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with DBN.  If not, see <http://www.gnu.org/licenses/>.
