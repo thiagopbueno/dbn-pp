@@ -116,7 +116,7 @@ namespace dbn {
                 }
                 new_domain->next_instantiation(inst);
             }
-            new_factor.partition() = partition;
+            new_factor._partition = partition;
 
             return new_factor;
         }
@@ -146,7 +146,7 @@ namespace dbn {
             // find next instantiation
             new_domain->next_instantiation(inst);
         }
-        new_factor.partition() = partition;
+        new_factor._partition = partition;
         return new_factor;
     }
 
@@ -185,7 +185,7 @@ namespace dbn {
             // find next instantiation
             d.next_instantiation(instantiation, evidence);
         }
-        new_factor.partition() = partition;
+        new_factor._partition = partition;
 
         return new_factor;
     }
@@ -194,19 +194,35 @@ namespace dbn {
         _domain->modify_scope(renaming);
     }
 
-    ostream &operator<<(ostream &o, const Factor &f) {
-        o << "Factor(" << *(f._domain);
-        o << ", size:" << f.size();
-        o << ", partition:" << f._partition;
-        o << ", values:[";
-        o.precision(3);
-        o << fixed;
-        unsigned i;
-        for (i = 0; i < f.size()-1; ++i) { 
-            o << f._values[i] << ", ";
+    ostream &operator<<(ostream &os, const Factor &f) {
+
+        const Domain &domain = f.domain();
+        int width = domain.width();
+        int size = domain.size();
+
+        os << "Factor(";
+        // os << "output = " << f._output << ", ";
+        os << "width = " << width << ", ";
+        os << "size = " << size << ", ";
+        os << "partition = " << f.partition() << ")" << endl;
+
+        // scope
+        for (auto pf : domain.scope()) {
+            os << pf->id() << " ";
         }
-        o << f._values[i] << "])";
-        return o;
+        os << endl;
+
+        // values
+        vector<unsigned> inst(width, 0);
+        for (int i = 0; i < size; ++i) {
+            for (int j = 0; j < width; ++j) {
+                os << inst[j] << " ";
+            }
+            os << ": " << f[inst] << endl;
+            domain.next_instantiation(inst);
+        }
+
+        return os;
     }
 
 }

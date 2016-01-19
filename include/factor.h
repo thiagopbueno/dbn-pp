@@ -38,10 +38,12 @@ namespace dbn {
         Factor operator*(const Factor &f);
         void operator*=(const Factor &f);
 
-        const Domain &domain() const { return *_domain; };
-        unsigned size()  const { return _domain->size();  };
-        unsigned width() const { return _domain->width(); };
-        double &partition() { return _partition; };
+        const Domain &domain() const { return *_domain; }
+        unsigned size()        const { return _domain->size();  }
+        unsigned width()       const { return _domain->width(); }
+        double partition()     const { return _partition; }
+
+        void partition(double p) { _partition = p; }
 
         const double &operator[](unsigned i) const;
         double &operator[](unsigned i);
@@ -57,7 +59,7 @@ namespace dbn {
 
         void change_variables(std::unordered_map<unsigned,const Variable*> renaming);
 
-        friend std::ostream &operator<<(std::ostream &o, const Factor &f);
+        friend std::ostream &operator<<(std::ostream &os, const Factor &f);
 
     private:
         std::unique_ptr<Domain> _domain;
