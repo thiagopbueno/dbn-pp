@@ -50,14 +50,13 @@ namespace dbn {
 
         double operator[](std::vector<unsigned> instantiation) const;
 
+        Factor change_variables(std::unordered_map<unsigned,const Variable*> renaming);
         bool in_scope(const Variable *variable) const;
 
         Factor sum_out(const Variable *variable) const;
         Factor product(const Factor &f) const;
         Factor normalize() const;
         Factor conditioning(const std::unordered_map<unsigned,unsigned> &evidence) const;
-
-        void change_variables(std::unordered_map<unsigned,const Variable*> renaming);
 
         friend std::ostream &operator<<(std::ostream &os, const Factor &f);
 

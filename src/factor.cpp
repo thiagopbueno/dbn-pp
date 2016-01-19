@@ -88,6 +88,12 @@ namespace dbn {
         return (_domain->in_scope(variable));
     }
 
+    Factor Factor::change_variables(std::unordered_map<unsigned,const Variable*> renaming) {
+        Factor new_factor(*this);
+        new_factor._domain->modify_scope(renaming);
+        return new_factor;
+    }
+
     Factor Factor::sum_out(const Variable *variable) const {
         if (!in_scope(variable)) {
             Factor new_factor(*this);
@@ -188,10 +194,6 @@ namespace dbn {
         new_factor._partition = partition;
 
         return new_factor;
-    }
-
-    void Factor::change_variables(std::unordered_map<unsigned,const Variable*> renaming) {
-        _domain->modify_scope(renaming);
     }
 
     ostream &operator<<(ostream &os, const Factor &f) {

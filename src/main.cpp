@@ -74,17 +74,17 @@ int main(int argc, char *argv[])
     cout << ">> FILTERING: " << argv[2] << endl;
     print_observations(observations);
 
+    cout << "Unrolled filtering:" << endl;
+    vector<shared_ptr<Factor>> states1 = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
+    print_trajectory<Factor>(states1, state_variables);
+
     cout << "Forward filtering:" << endl;
-    vector<shared_ptr<Factor>> states = filtering(factors, prior, transition, sensor, observations);
-    print_trajectory<Factor>(states, state_variables);
+    vector<shared_ptr<Factor>> states2 = filtering(factors, prior, transition, sensor, observations);
+    print_trajectory<Factor>(states2, state_variables);
 
     cout << "Forward ADD filtering:" << endl;
-    vector<shared_ptr<ADDFactor>> states2 = filtering(addfactors, prior, transition, sensor, observations);
-    print_trajectory<ADDFactor>(states2, state_variables);
-
-    cout << "Unrolled filtering:" << endl;
-    vector<shared_ptr<Factor>> states3 = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
-    print_trajectory<Factor>(states3, state_variables);
+    vector<shared_ptr<ADDFactor>> states3 = filtering(addfactors, prior, transition, sensor, observations);
+    print_trajectory<ADDFactor>(states3, state_variables);
 
     return 0;
 }

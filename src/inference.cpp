@@ -115,7 +115,7 @@ namespace dbn {
 		// variable elimination
 		sum_prod_factors.push_back(make_shared<Factor>(forward));
 		Factor projection = variable_elimination(ordering, sum_prod_factors);
-		projection.change_variables(transition);
+		projection = projection.change_variables(transition);
 		sum_prod_factors.pop_back();
 
 		return projection;
@@ -336,36 +336,38 @@ namespace dbn {
 		bool verbose)
 	{
 
+		vector<const Variable*> vars;
 		vector<shared_ptr<Factor>> estimates;
 
-		vector<const Variable*> ordering;
+		int N = variables.size();
+		for (auto const &pv : variables) {
+			vars.push_back(pv.get());
+		}
 
 		unordered_map<unsigned,const Variable *> renaming;
 		for (auto it_transition : transition) {
-			const Variable *next_var = variables[it_transition.first].get();
+			const Variable *next_var = vars[it_transition.first];
 			unsigned curr_id = it_transition.second->id();
 			renaming[curr_id] = next_var;
 		}
 
+		vector<const Variable*> ordering;
 		vector<shared_ptr<Factor>> unrolled_factors;
-
 		for (auto prior_id : prior) {
 			unrolled_factors.push_back(factors[prior_id]);
-			// ordering.push_back(variables[prior_id].get());
+			// ordering.push_back(vars[prior_id]);
 		}
-
 		for (auto it_transition : transition) {
 			unsigned id_next = it_transition.first;
 			unrolled_factors.push_back(factors[id_next]);
 
 			unsigned id_curr = it_transition.second->id();
-			ordering.push_back(variables[id_curr].get());
+			ordering.push_back(vars[id_curr]);
 		}
-
 		for (auto sensor_id : sensor) {
-			Factor *sensor_factor = factors[sensor_id].get();
-			sensor_factor->change_variables(renaming);
-			Factor new_factor = sensor_factor->conditioning(observations[0]).normalize();
+			Factor sensor_factor(*factors[sensor_id]);
+			sensor_factor = sensor_factor.change_variables(renaming);
+			Factor new_factor = sensor_factor.conditioning(observations[0]).normalize();
 			unrolled_factors.push_back(make_shared<Factor>(new_factor));
 		}
 
@@ -395,11 +397,11 @@ namespace dbn {
 				unsigned id_from = it_renaming.first;
 				unsigned id_to = it_renaming.second->id();
 				if (id_to == var_id) {
-					renaming_back[var_id] = variables[id_from].get();
+					renaming_back[var_id] = vars[id_from];
 				}
 			}
 		}
-		estimate.change_variables(renaming_back);
+		estimate = estimate.change_variables(renaming_back);
 		estimates.push_back(make_shared<Factor>(estimate));
 
 		unsigned id = factors.size();
@@ -417,13 +419,13 @@ namespace dbn {
 				unsigned id_next = it_transition.first;
 				unsigned id_curr = it_transition.second->id();
 
-				unique_ptr<Variable> new_var = unique_ptr<Variable>(new Variable(id, variables[id_next]->size()));
-				renaming[id_next] = new_var.get();
-				variables.push_back(move(new_var));
+				const Variable *new_var = new Variable(id, vars[id_next]->size());
+				renaming[id_next] = new_var;
+				vars.push_back(new_var);
 				id++;
 
 				Factor *new_factor = new Factor(*factors[id_next]);
-				new_factor->change_variables(renaming);
+				*new_factor = new_factor->change_variables(renaming);
 
 				unrolled_factors.emplace_back(new_factor);
 				ordering.push_back(renaming[id_curr]);
@@ -437,14 +439,14 @@ namespace dbn {
 			}
 
 			for (auto sensor_id : sensor) {
-				unique_ptr<Variable> new_var = unique_ptr<Variable>(new Variable(id, variables[sensor_id]->size()));
-				renaming[sensor_id] = new_var.get();
-				variables.push_back(move(new_var));
+				const Variable *new_var = new Variable(id, vars[sensor_id]->size());
+				renaming[sensor_id] = new_var;
+				vars.push_back(new_var);
 				id++;
 
 				Factor *sensor_factor = factors[sensor_id].get();
 				Factor new_factor = sensor_factor->conditioning(observations[t]).normalize();
-				new_factor.change_variables(renaming);
+				new_factor = new_factor.change_variables(renaming);
 				unrolled_factors.push_back(make_shared<Factor>(new_factor));
 			}
 
@@ -469,12 +471,17 @@ namespace dbn {
 					unsigned id_from = it_renaming.first;
 					unsigned id_to = it_renaming.second->id();
 					if (id_to == var_id) {
-						renaming_back[var_id] = variables[id_from].get();
+						renaming_back[var_id] = vars[id_from];
 					}
 				}
 			}
-			estimate.change_variables(renaming_back);
+			estimate = estimate.change_variables(renaming_back);
 			estimates.push_back(make_shared<Factor>(estimate));
+		}
+
+		unsigned vars_sz = vars.size();
+		for (unsigned i = N; i < vars_sz; ++i) {
+			delete vars[i];
 		}
 
 		return estimates;
