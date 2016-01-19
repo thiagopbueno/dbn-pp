@@ -28,8 +28,12 @@ $ ./dbn
 ## Usage
 
 ```
-$ ./dbn /path/to/model.duai /path/to/observations.duai.evid
+$ ./dbn /path/to/model.duai /path/to/observations.duai.evid [OPTIONS]
+
+OPTIONS:
+-v verbose
 ```
+
 ## Input
 
 ### uai extended specification for finite-state DBNs
@@ -149,9 +153,9 @@ DBAYES
 ```
 
 ```
-$ ./dbn data/models/enough-sleep.duai data/models/enough-sleep.duai.evid
+$ ./dbn data/models/enough-sleep.duai data/models/enough-sleep.duai.evid -v
 
->> MODEL: data/models/enough-sleep.duai
+>> NETWORK: data/models/enough-sleep.duai
 === Variables ===
 Variable(id:0, size:2)
 Variable(id:1, size:2)
@@ -194,7 +198,8 @@ Variables { 1->0 }
 === Sensor model ===
 Variables { 2 3 }
 
->> FILTERING: data/models/enough-sleep.duai.evid
+>> OBSERVATIONS: data/models/enough-sleep.duai.evid
+timeslices = 7
 === Observations ===
 @t = 1 { 3:0 2:0 }
 @t = 2 { 3:0 2:1 }
@@ -204,19 +209,23 @@ Variables { 2 3 }
 @t = 6 { 3:0 2:1 }
 @t = 7 { 3:1 2:0 }
 
-@ Unrolled filtering: total time = 0.800 ms, time per slice = 0.114 ms.
+>> FILTERING:
+@ Unrolled filtering:
+total time = 0.850 ms, time per slice = 0.121 ms.
 === Trajectory ===
 0
 0 : 0.136 0.499 0.896 0.349 0.149 0.507 0.483
 1 : 0.864 0.501 0.104 0.651 0.851 0.493 0.517
 
-@ Forward filtering: total time = 0.237 ms, time per slice = 0.034 ms.
+@ Forward filtering:
+total time = 0.246 ms, time per slice = 0.035 ms.
 === Trajectory ===
 0
 0 : 0.136 0.499 0.896 0.349 0.149 0.507 0.483
 1 : 0.864 0.501 0.104 0.651 0.851 0.493 0.517
 
-@ Forward ADD filtering: total time = 0.425 ms, time per slice = 0.061 ms.
+@ Forward ADD filtering:
+total time = 0.441 ms, time per slice = 0.063 ms.
 === Trajectory ===
 0
 0 : 0.136 0.499 0.896 0.349 0.149 0.507 0.483
