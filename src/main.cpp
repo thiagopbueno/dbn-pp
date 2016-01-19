@@ -26,6 +26,7 @@
 #include <unordered_map>
 #include <set>
 #include <memory>
+#include <chrono>
 
 #include "addfactor.h"
 
@@ -70,20 +71,36 @@ int main(int argc, char *argv[])
     vector<unordered_map<unsigned,unsigned>> observations;
     set<unsigned> state_variables;
     if (read_observations(argv[2], observations, state_variables)) return -2;
+    int T = observations.size();
 
     cout << ">> FILTERING: " << argv[2] << endl;
     print_observations(observations);
 
-    cout << "Unrolled filtering:" << endl;
+    cout << "@ Unrolled filtering: ";
+    auto start = chrono::steady_clock::now();
     vector<shared_ptr<Factor>> states1 = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
+    auto end = chrono::steady_clock::now();
+    auto diff = end - start;
+    cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
+    cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
     print_trajectory<Factor>(states1, state_variables);
 
-    cout << "Forward filtering:" << endl;
+    cout << "@ Forward filtering: ";
+    start = chrono::steady_clock::now();
     vector<shared_ptr<Factor>> states2 = filtering(factors, prior, transition, sensor, observations);
+    end = chrono::steady_clock::now();
+    diff = end - start;
+    cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
+    cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
     print_trajectory<Factor>(states2, state_variables);
 
-    cout << "Forward ADD filtering:" << endl;
+    cout << "@ Forward ADD filtering: ";
+    start = chrono::steady_clock::now();
     vector<shared_ptr<ADDFactor>> states3 = filtering(addfactors, prior, transition, sensor, observations);
+    end = chrono::steady_clock::now();
+    diff = end - start;
+    cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
+    cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
     print_trajectory<ADDFactor>(states3, state_variables);
 
     return 0;
