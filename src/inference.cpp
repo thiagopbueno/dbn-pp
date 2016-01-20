@@ -17,9 +17,11 @@
 // along with DBN.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "inference.h"
+#include "graph.h"
 
 #include <forward_list>
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
@@ -32,7 +34,10 @@ namespace dbn {
 	    forward_list<shared_ptr<Factor>> flist(factors.begin(), factors.end());
 	    forward_list<shared_ptr<Factor>> bucket;
 
-		for (auto var: variables) {
+	    Graph g(factors);
+		vector<const Variable*> ordering = g.ordering(variables);
+
+		for (auto var: ordering) {
 
 			// select all factors with var in its scope
 			bucket.clear();
