@@ -66,7 +66,7 @@ namespace dbn {
     void read_variables(ifstream &input_file, unsigned &order, vector<unique_ptr<Variable>> &variables) {
         read_next_integer(input_file, order);
 
-        unsigned sz;
+        unsigned sz = 0;
         for (unsigned id = 0; id < order; ++id) {
             read_next_integer(input_file, sz);
             variables.emplace_back(new Variable(id, sz));
