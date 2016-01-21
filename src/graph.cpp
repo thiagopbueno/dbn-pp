@@ -58,7 +58,7 @@ namespace dbn {
 	unsigned
 	Graph::min_fill(std::vector<const Variable*> &variables, unordered_set<const Variable*> &processed)
 	{
-		unsigned min_index;
+		unsigned min_index = 0;
 		unsigned min_fill = _adj.size();
 
 		unsigned nvars = variables.size();

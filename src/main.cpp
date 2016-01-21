@@ -19,7 +19,7 @@
 #include "io.h"
 #include "inference.h"
 
-#include "stdio.h"
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <vector>
