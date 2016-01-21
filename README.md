@@ -2,7 +2,9 @@
 
 Data structures and algorithms in C++ for **probabilistic modeling and inference** in (discrete-time) finite-state Dynamic Bayesian Networks (DBNs).
 
-Currently supported inference tasks: filtering.
+Currently supported inference tasks:
+
+* filtering.
 
 Algorithms implemented in this version:
 
@@ -28,9 +30,16 @@ $ ./dbn
 ## Usage
 
 ```
-$ ./dbn /path/to/model.duai /path/to/observations.duai.evid [OPTIONS]
+$ ./dbn
+Usage: ./dbn /path/to/model.duai /path/to/observations.duai.evid [OPTIONS]
+
+Filtering methods (-m option):
+(1) variable elimination in unrolled network
+(2) interface algorithm
+(3) interface algorithm with ADDs
 
 OPTIONS:
+-m filtering method (1|2|3)
 -v verbose
 ```
 
@@ -153,7 +162,7 @@ DBAYES
 ```
 
 ```
-$ ./dbn data/models/enough-sleep.duai data/models/enough-sleep.duai.evid -v
+$ ./dbn data/models/enough-sleep.duai data/evidence/enough-sleep.duai.evid -v -m 123
 
 >> NETWORK: data/models/enough-sleep.duai
 === Variables ===

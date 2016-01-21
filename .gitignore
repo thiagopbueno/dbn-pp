@@ -11,6 +11,8 @@ dbn-debug.dSYM/
 dbn.dSYM/
 *.supp
 
+data/results/*.*
+
 # Compiled Object files
 *.slo
 *.lo

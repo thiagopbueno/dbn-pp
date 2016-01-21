@@ -33,6 +33,9 @@
 using namespace std;
 using namespace dbn;
 
+void usage(const char *filename);
+int read_options(int argc, char *argv[], bool &verbose, bool &m1, bool &m2, bool &m3);
+
 void print_model(
     vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors,
     vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor
@@ -43,14 +46,6 @@ void print_observations(vector<unordered_map<unsigned,unsigned>> &observations);
 template<class T>
 void print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables);
 
-void usage(const char *filename)
-{
-    cout << "Usage: " << filename << " /path/to/model.duai /path/to/observations.duai.evid";
-    cout << " [OPTIONS]" << endl << endl;
-    cout << "OPTIONS:" << endl;
-    cout << "-v verbose" << endl;
-}
-
 int main(int argc, char *argv[])
 {
     if (argc < 3) {
@@ -59,10 +54,8 @@ int main(int argc, char *argv[])
     }
 
     bool verbose = false;
-    if (argc == 4) {
-        string options(argv[3]);
-        if (options == "-v") verbose = true;
-    }
+    bool m1 = false, m2 = false, m3 = false;
+    if (read_options(argc, argv, verbose, m1, m2, m3)) return -1;
 
     unsigned order;
     vector<unique_ptr<Variable>> variables;
@@ -73,15 +66,16 @@ int main(int argc, char *argv[])
     unordered_map<unsigned,const Variable*> transition;
     vector<unsigned> sensor;
 
-    if (read_uai_model(argv[1], order, variables, factors, addfactors, prior, transition, sensor)) return -1;
+    if (read_uai_model(argv[1], order, variables, factors, addfactors, prior, transition, sensor)) return -2;
     cout << ">> NETWORK: " << argv[1] << endl;
     if (verbose) {
         print_model(variables, factors, prior, transition, sensor);
     }
+    cout << endl;
 
     vector<unordered_map<unsigned,unsigned>> observations;
     set<unsigned> state_variables;
-    if (read_observations(argv[2], observations, state_variables)) return -2;
+    if (read_observations(argv[2], observations, state_variables)) return -3;
     int T = observations.size();
 
     cout << ">> OBSERVATIONS: " << argv[2] << endl;
@@ -89,48 +83,102 @@ int main(int argc, char *argv[])
     if (verbose) {
         print_observations(observations);
     }
+    cout << endl;
 
-    cout << ">> FILTERING: " << endl;
-    cout << "@ Unrolled filtering:" << endl;
-    auto start = chrono::steady_clock::now();
-    vector<shared_ptr<Factor>> states1 = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
-    auto end = chrono::steady_clock::now();
-    auto diff = end - start;
-    cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
-    cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
-    if (verbose) {
-        print_trajectory<Factor>(states1, state_variables);
+    cout << ">> FILTERING: " << endl << endl;
+
+    if (m1) {
+        cout << "@ Unrolled filtering:" << endl;
+        auto start = chrono::steady_clock::now();
+        vector<shared_ptr<Factor>> states1 = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
+        auto end = chrono::steady_clock::now();
+        auto diff = end - start;
+        cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
+        cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
+        if (verbose) {
+            print_trajectory<Factor>(states1, state_variables);
+        }
+        cout << endl;
     }
 
-    cout << "@ Forward filtering:" << endl;
-    start = chrono::steady_clock::now();
-    vector<shared_ptr<Factor>> states2 = filtering(factors, prior, transition, sensor, observations);
-    end = chrono::steady_clock::now();
-    diff = end - start;
-    cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
-    cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
-    if (verbose) {
-        print_trajectory<Factor>(states2, state_variables);
+    if (m2) {
+        cout << "@ Forward filtering:" << endl;
+        auto start = chrono::steady_clock::now();
+        vector<shared_ptr<Factor>> states2 = filtering(factors, prior, transition, sensor, observations);
+        auto end = chrono::steady_clock::now();
+        auto diff = end - start;
+        cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
+        cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
+        if (verbose) {
+            print_trajectory<Factor>(states2, state_variables);
+        }
+        cout << endl;
     }
 
-    cout << "@ Forward ADD filtering:" << endl;
-    start = chrono::steady_clock::now();
-    vector<shared_ptr<ADDFactor>> states3 = filtering(addfactors, prior, transition, sensor, observations);
-    end = chrono::steady_clock::now();
-    diff = end - start;
-    cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
-    cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
-    if (verbose) {
-        print_trajectory<ADDFactor>(states3, state_variables);
+    if (m3) {
+        cout << "@ Forward ADD filtering:" << endl;
+        auto start = chrono::steady_clock::now();
+        vector<shared_ptr<ADDFactor>> states3 = filtering(addfactors, prior, transition, sensor, observations);
+        auto end = chrono::steady_clock::now();
+        auto diff = end - start;
+        cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
+        cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
+        if (verbose) {
+            print_trajectory<ADDFactor>(states3, state_variables);
+        }
+        cout << endl;
     }
 
     return 0;
 }
 
-void print_model(
-    vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors,
-    vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor) {
+void
+usage(const char *filename)
+{
+    string usage = "Usage: " + string(filename) + " /path/to/model.duai /path/to/observations.duai.evid [OPTIONS]";
+    cout << usage << endl << endl;
 
+    cout << "Filtering methods (-m option):" << endl;
+    cout << "(1) variable elimination in unrolled network" << endl;
+    cout << "(2) interface algorithm" << endl;
+    cout << "(3) interface algorithm with ADDs" << endl;
+    cout << endl;
+
+    cout << "OPTIONS:" << endl;
+    cout << "-m filtering method (1|2|3)" << endl;
+    cout << "-v verbose" << endl;
+}
+
+int
+read_options(int argc, char *argv[], bool &verbose, bool &m1, bool &m2, bool &m3)
+{
+    if (argc >= 4) {
+        for (int i = 3; i < argc; ++i) {
+            string option(argv[i]);
+            if (option == "-v") verbose = true;
+            else if (option == "-m") {
+                char *m = argv[i+1];
+                for (unsigned j = 0; j < strlen(m); ++j) {
+                    switch (m[j]) {
+                        case '1': m1 = true; break;
+                        case '2': m2 = true; break;
+                        case '3': m3 = true; break;
+                        default:
+                            cerr << "Error: wrong method option " << m << endl;
+                            return -1;
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+void
+print_model(
+    vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors,
+    vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor)
+{
     cout << "=== Variables ===" << endl;
     for (auto const& pv : variables) {
         cout << *pv << endl;
@@ -167,7 +215,9 @@ void print_model(
     cout << " }" << endl << endl;
 }
 
-void print_observations(vector<unordered_map<unsigned,unsigned>> &observations) {
+void
+print_observations(vector<unordered_map<unsigned,unsigned>> &observations)
+{
     cout << "=== Observations ===" << endl;
     cout.precision(3);
     cout << fixed;
@@ -185,7 +235,9 @@ void print_observations(vector<unordered_map<unsigned,unsigned>> &observations) 
 }
 
 template<class T>
-void print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables) {
+void
+print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables)
+{
 
     unsigned timeslices = states.size();
     for (unsigned i = 0; i < timeslices; ++i) {
