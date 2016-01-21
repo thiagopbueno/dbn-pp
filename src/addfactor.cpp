@@ -172,7 +172,11 @@ namespace dbn {
 	ADDFactor ADDFactor::normalize() const {
 		DdManager *ddmgr = mgr.getManager();
 		DdNode *partitionNode = Cudd_addConst(ddmgr, partition());
+		Cudd_Ref(partitionNode);
+
 		DdNode *ddNode = Cudd_addApply(ddmgr, Cudd_addDivide, _dd.getNode(), partitionNode);
+		Cudd_Ref(ddNode);
+
 		string output = "norm(" + _output + ")";
 		return ADDFactor(output, ADD(mgr, ddNode), *_domain);
 	}
