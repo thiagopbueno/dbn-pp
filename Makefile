@@ -4,8 +4,8 @@ CCFLAGS=-Wall -Wextra -ansi -pedantic -std=c++11
 OBJ=bin/variable.o bin/domain.o bin/factor.o bin/addfactor.o bin/io.o bin/graph.o bin/inference.o bin/main.o
 OBJDEBUG=debug/variable.o debug/domain.o debug/factor.o debug/addfactor.o debug/io.o debug/graph.o debug/inference.o debug/main.o
 
-# CUDD=/usr/local/CUDD/cudd-3.0.0
-CUDD=/home/posmac/tbueno/lib/CUDD/cudd-3.0.0
+CUDD=/usr/local/CUDD/cudd-3.0.0
+# CUDD=/home/posmac/tbueno/lib/CUDD/cudd-3.0.0
 
 INCLUDE=-Iinclude -I$(CUDD)/cudd -I$(CUDD)/cplusplus
 
