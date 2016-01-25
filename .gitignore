@@ -5,6 +5,7 @@
 *.dot
 *.ps
 *.pdf
+*.pyc
 
 dbn-debug
 dbn-debug.dSYM/
