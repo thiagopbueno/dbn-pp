@@ -10,13 +10,10 @@ DBAYES
 2 # id=1 name=R' domain={0,1}
 2 # id=2 name=U  domain={0,1}
 
-# Prior
-1 0
-
-# Transition
+# 2TBN
 2 0 1
 
-# Sensor
+# Observation
 1 2
 
 # Domains

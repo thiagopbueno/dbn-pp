@@ -17,13 +17,10 @@ DBAYES
 4
 2 2 2 2
 
-# Prior
-1 0
-
-# Transition
+# 2TBN
 2 0 1
 
-# Sensor
+# Observations
 2 2 3
 
 # Domains

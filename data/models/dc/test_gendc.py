@@ -13,7 +13,6 @@ class TestGendc(unittest.TestCase):
 		cls.total_number_vars = cls.inputs + cls.gates + 2*cls.health
 		cls.model_type = gendc.model_type()
 		cls.model_vars = gendc.variables(cls.inputs, cls.gates, cls.health)
-		cls.prior_vars = gendc.prior(cls.inputs, cls.gates, cls.health)
 		cls.transition_vars = gendc.transition(cls.inputs, cls.gates, cls.health)
 		cls.sensor_vars = gendc.sensor(cls.inputs, cls.gates)
 		cls.domains = gendc.domain(cls.inputs, cls.gates, cls.health)
@@ -24,14 +23,6 @@ class TestGendc(unittest.TestCase):
 		self.assertEqual(len(self.model_vars), self.total_number_vars+1)
 		for cardinality in self.model_vars[1:]:
 			self.assertEqual(cardinality, 2)
-
-	def test_prior(self):
-		self.assertEqual(self.prior_vars[0], self.health)
-		self.assertEqual(len(self.prior_vars), self.health+1)
-		i = 1
-		for var_id in range(self.inputs + self.gates, len(self.prior_vars), 2):
-			self.assertEqual(self.prior_vars[i], var_id)
-			i += 1
 
 	def test_transition(self):
 		self.assertEqual(self.transition_vars[0], 2*self.health)

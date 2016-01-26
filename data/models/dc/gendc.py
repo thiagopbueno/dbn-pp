@@ -12,15 +12,6 @@ def variables(inputs, gates, health):
 		model_vars.append(2)
 	return model_vars
 
-def prior(inputs, gates, health):
-	total = health
-	prior_vars = [total]
-	i = 0
-	for j in range(health):
-		prior_vars.append(inputs + gates + i)
-		i += 2
-	return prior_vars
-
 def transition(inputs, gates, health):
 	total = 2*health
 	transition_vars = [total]
@@ -200,7 +191,6 @@ if __name__ == '__main__':
 	observations = int(sys.argv[5])
 
 	model_vars = list(map(str, variables(inputs, gates, health)))
-	prior_vars = list(map(str, prior(inputs, gates, health)))
 	transition_vars = list(map(str, transition(inputs, gates, health)))
 	sensor_vars = list(map(str, sensor(inputs, gates)))
 	domains = domain(inputs, gates, health)
@@ -213,15 +203,11 @@ if __name__ == '__main__':
 		model.write(model_vars[0] + "\n")
 		model.write(' '.join(model_vars[1:]) + "\n\n")
 
-		model.write("# Prior\n")
-		model.write(prior_vars[0] + "\n")
-		model.write(' '.join(prior_vars[1:]) + "\n\n")
-
-		model.write("# 2TBN\n")
+		model.write("# Interface\n")
 		model.write(transition_vars[0] + "\n")
 		model.write(' '.join(transition_vars[1:]) + "\n\n")
 
-		model.write("# Sensor\n")
+		model.write("# Observations\n")
 		model.write(sensor_vars[0] + "\n")
 		model.write(' '.join(sensor_vars[1:]) + "\n\n")
 

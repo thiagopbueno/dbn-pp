@@ -62,8 +62,6 @@ DBAYES
 
 <N> [list of variable sizes]
 
-<P> [list of prior variable ids]
-
 <T> [list of pairs (id_var_slice1, id_var_slice2)]
 
 <S> [list of sensor variable ids]
@@ -83,11 +81,10 @@ DBAYES
 where the constants are such that:
 
 * N is the total number of variables
-* P is the total number of variables in the prior model
-* T is the total number of variables in the transition model
+* T is the total number of variables in the 2TBN model
 * S is the total numver of variables in the sensor model
 
-Please note that N = T + S and P <= N.
+Please note that N = T + S.
 The width of a factor refers to the cardinality of its scope/domain and its size is the number of possible instantiations of its scope/domain variables.
 
 Comments are allowed anywhere and start with '#' sign and go until the end of the line. Whitespaces are ignored.
@@ -130,10 +127,7 @@ DBAYES
 2 	#  id=2  name=R  domain={0,1}
 2 	#  id=3  name=C  domain={0,1}
 
-# Prior
-1 0
-
-# Transition
+# 2TBN
 2 0 1
 
 # Sensor
@@ -162,80 +156,30 @@ DBAYES
 ```
 
 ```
-$ ./dbn data/models/enough-sleep.duai data/evidence/enough-sleep.duai.evid -v -m 123
+$ ./dbn data/models/HMMs/enough-sleep.duai data/evidence/enough-sleep.duai.evid -v -m 123
 
->> NETWORK: data/models/enough-sleep.duai
-=== Variables ===
-Variable(id:0, size:2)
-Variable(id:1, size:2)
-Variable(id:2, size:2)
-Variable(id:3, size:2)
+>> NETWORK: data/models/HMMs/enough-sleep.duai
+number of interface variables   = 1
+number of observation variables = 2
+number of internal variables    = 0
+total number of variables       = 4
 
-=== Factors ===
-Factor(width = 1, size = 2, partition = 1)
-0
-0 : 0.3
-1 : 0.7
+>> OBSERVATIONS: data/evidence/enough-sleep.duai.evid
+number of timeslices = 7
 
-Factor(width = 2, size = 4, partition = 2)
-1 0
-0 0 : 0.7
-0 1 : 0.2
-1 0 : 0.3
-1 1 : 0.8
-
-Factor(width = 2, size = 4, partition = 2)
-2 0
-0 0 : 0.3
-0 1 : 0.8
-1 0 : 0.7
-1 1 : 0.2
-
-Factor(width = 2, size = 4, partition = 2)
-3 0
-0 0 : 0.7
-0 1 : 0.9
-1 0 : 0.3
-1 1 : 0.1
-
-=== Prior model ===
-Variables { 0 }
-
-=== 2TBN ===
-Variables { 1->0 }
-
-=== Sensor model ===
-Variables { 2 3 }
-
->> OBSERVATIONS: data/models/enough-sleep.duai.evid
-timeslices = 7
-=== Observations ===
-@t = 1 { 3:0 2:0 }
-@t = 2 { 3:0 2:1 }
-@t = 3 { 3:1 2:1 }
-@t = 4 { 3:0 2:0 }
-@t = 5 { 3:0 2:0 }
-@t = 6 { 3:0 2:1 }
-@t = 7 { 3:1 2:0 }
-
->> FILTERING:
-@ Unrolled filtering:
-total time = 0.850 ms, time per slice = 0.121 ms.
-=== Trajectory ===
+>> Unrolled filtering: total time = 0.985747 ms, time per slice = 0.140821 ms.
 0
 0 : 0.136 0.499 0.896 0.349 0.149 0.507 0.483
 1 : 0.864 0.501 0.104 0.651 0.851 0.493 0.517
 
-@ Forward filtering:
-total time = 0.246 ms, time per slice = 0.035 ms.
-=== Trajectory ===
+
+>> Forward filtering: total time = 0.266 ms, time per slice = 0.038 ms.
 0
 0 : 0.136 0.499 0.896 0.349 0.149 0.507 0.483
 1 : 0.864 0.501 0.104 0.651 0.851 0.493 0.517
 
-@ Forward ADD filtering:
-total time = 0.441 ms, time per slice = 0.063 ms.
-=== Trajectory ===
+
+>> Forward ADD filtering: total time = 0.444 ms, time per slice = 0.063 ms.
 0
 0 : 0.136 0.499 0.896 0.349 0.149 0.507 0.483
 1 : 0.864 0.501 0.104 0.651 0.851 0.493 0.517
