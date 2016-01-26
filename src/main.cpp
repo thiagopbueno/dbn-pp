@@ -65,23 +65,26 @@ int main(int argc, char *argv[])
     vector<shared_ptr<Factor>> factors;
     vector<shared_ptr<ADDFactor>> addfactors;
 
-    vector<unsigned> prior;
+    set<unsigned> interface;
+    set<unsigned> sensor;
+    set<unsigned> prior;
+    set<unsigned> internals;
+
     unordered_map<unsigned,const Variable*> transition;
-    vector<unsigned> sensor;
 
     // READ MODEL FROM FILE
-    if (read_uai_model(model, order, variables, factors, addfactors, prior, transition, sensor)) return -2;
+    if (read_uai_model(model, order, variables, factors, addfactors, prior, interface, sensor, internals, transition)) return -2;
 
     unsigned nvariables = variables.size();
-    unsigned state_width = prior.size();
     unsigned interface_width = transition.size();
     unsigned observation_width = sensor.size();
+    unsigned internals_width = internals.size();
 
     if (verbose) {
         cout << ">> NETWORK: " << model << endl;
-        cout << "number of state variables       = " << state_width << endl;
         cout << "number of interface variables   = " << interface_width << endl;
         cout << "number of observation variables = " << observation_width << endl;
+        cout << "number of internal variables    = " << internals_width << endl;
         cout << "total number of variables       = " << nvariables << endl;
         cout << endl;
         // print_model(variables, factors, prior, transition, sensor);
@@ -100,6 +103,11 @@ int main(int argc, char *argv[])
         // cout << endl;
     }
 
+    vector<const Variable*> vars;
+    for (auto const &v : variables) {
+        vars.push_back(v.get());
+    }
+
     // COMPUTE FILTERING
     if (m1) {
         auto start = chrono::steady_clock::now();
@@ -108,7 +116,7 @@ int main(int argc, char *argv[])
         auto diff = end - start;
 
         if (verbose) {
-            cout << "@ Unrolled filtering: ";
+            cout << ">> Unrolled filtering: ";
             cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
             cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
             print_trajectory<Factor>(states1, state_variables);
@@ -118,7 +126,7 @@ int main(int argc, char *argv[])
             cout << model << ";";
             cout << 1 << ";";
             cout << T << ";";
-            cout << state_width << ";" << interface_width << ";" << observation_width << ";";
+            cout << interface_width << ";" << observation_width << ";";
             cout << chrono::duration <double, milli> (diff).count() << ";";
             cout << chrono::duration <double, milli> (diff).count() / T << endl;
         }
@@ -126,12 +134,12 @@ int main(int argc, char *argv[])
 
     if (m2) {
         auto start = chrono::steady_clock::now();
-        vector<shared_ptr<Factor>> states2 = filtering(factors, prior, transition, sensor, observations);
+        vector<shared_ptr<Factor>> states2 = filtering(vars, factors, prior, sensor, internals, transition, observations);
         auto end = chrono::steady_clock::now();
         auto diff = end - start;
 
         if (verbose) {
-            cout << "@ Forward filtering: ";
+            cout << ">> Forward filtering: ";
             cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
             cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
             print_trajectory<Factor>(states2, state_variables);
@@ -141,7 +149,7 @@ int main(int argc, char *argv[])
             cout << model << ";";
             cout << 2 << ";";
             cout << T << ";";
-            cout << state_width << ";" << interface_width << ";" << observation_width << ";";
+            cout << interface_width << ";" << observation_width << ";";
             cout << chrono::duration <double, milli> (diff).count() << ";";
             cout << chrono::duration <double, milli> (diff).count() / T << endl;
         }
@@ -149,12 +157,13 @@ int main(int argc, char *argv[])
 
     if (m3) {
         auto start = chrono::steady_clock::now();
-        vector<shared_ptr<ADDFactor>> states3 = filtering(addfactors, prior, transition, sensor, observations);
+        // vector<shared_ptr<ADDFactor>> states3 = filtering(vars, addfactors, prior, sensor, transition, sensor, observations);
+        vector<shared_ptr<ADDFactor>> states3 = filtering(vars, addfactors, prior, sensor, internals, transition, observations);
         auto end = chrono::steady_clock::now();
         auto diff = end - start;
 
         if (verbose) {
-            cout << "@ Forward ADD filtering: ";
+            cout << ">> Forward ADD filtering: ";
             cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
             cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
             print_trajectory<ADDFactor>(states3, state_variables);
@@ -164,7 +173,7 @@ int main(int argc, char *argv[])
             cout << model << ";";
             cout << 3 << ";";
             cout << T << ";";
-            cout << state_width << ";" << interface_width << ";" << observation_width << ";";
+            cout << interface_width << ";" << observation_width << ";";
             cout << chrono::duration <double, milli> (diff).count() << ";";
             cout << chrono::duration <double, milli> (diff).count() / T << endl;
         }
@@ -295,7 +304,6 @@ print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables)
         states[i] = make_shared<T>(f);
     }
 
-    cout << "=== Trajectory ===" << endl;
     const Domain &new_domain = states[0]->domain();
     for (unsigned i = 0; i < new_domain.width(); ++i) {
         cout << new_domain[i]->id() << " ";

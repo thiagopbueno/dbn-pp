@@ -20,6 +20,7 @@
 #include "graph.h"
 
 #include <forward_list>
+#include <set>
 #include <iostream>
 #include <algorithm>
 
@@ -110,11 +111,17 @@ namespace dbn {
 
 	Factor update(
 		const Factor &projection,
+		const set<const Variable*> &internals,
 		const Factor &sensor_model,
 		const unordered_map<unsigned,unsigned> &evidence) {
 
 		// add observation from time t
 		Factor evidence_t = sensor_model.conditioning(evidence);
+
+		// sum out internal nodes
+		for (auto var : internals) {
+			evidence_t = evidence_t.sum_out(var);
+		}
 
 		// update projection with observation
 		Factor belief_state = evidence_t * projection;
@@ -124,8 +131,9 @@ namespace dbn {
 	}
 
 	vector<shared_ptr<Factor>> filtering(
-		vector<shared_ptr<Factor>> &factors,
-		vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor,
+		vector<const Variable*> &variables, vector<shared_ptr<Factor>> &factors,
+		set<unsigned> &prior, set<unsigned> &sensor, set<unsigned> &internals,
+		unordered_map<unsigned,const Variable*> &transition,
 		vector<unordered_map<unsigned,unsigned>> &observations) {
 
 		// estimates
@@ -137,10 +145,17 @@ namespace dbn {
 			prior_model = prior_model * *(factors[id]);
 		}
 
-		// sensor model
+		// (generalized) sensor model
 		Factor sensor_model(1.0);
 		for (auto id : sensor) {
 			sensor_model = sensor_model * *(factors[id]);
+		}
+		for (auto id : internals) {
+			sensor_model = sensor_model * *(factors[id]);
+		}
+		set<const Variable*> internal_variables;
+		for (auto id : internals) {
+			internal_variables.insert(variables[id]);
 		}
 
 		// initialize forward message
@@ -151,7 +166,7 @@ namespace dbn {
 			Factor projection = project(factors, transition, forward);
 
 			// update belief state
-			forward = update(projection, sensor_model, evidence);
+			forward = update(projection, internal_variables, sensor_model, evidence);
 
 			// add new estimate to filtering list
 			estimates.push_back(make_shared<Factor>(forward));
@@ -239,11 +254,17 @@ namespace dbn {
 
 	ADDFactor update(
 		const ADDFactor &projection,
+		const set<const Variable*> &internals,
 		const ADDFactor &sensor_model,
 		const unordered_map<unsigned,unsigned> &evidence) {
 
 		// add observation from time t
 		ADDFactor evidence_t = sensor_model.conditioning(evidence);
+
+		// sum out internal nodes
+		for (auto var : internals) {
+			evidence_t = evidence_t.sum_out(var);
+		}
 
 		// update projection with observation
 		ADDFactor belief_state = evidence_t * projection;
@@ -252,8 +273,9 @@ namespace dbn {
 
 	vector<shared_ptr<ADDFactor>>
 	filtering(
-		vector<shared_ptr<ADDFactor>> &factors,
-		vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor,
+		vector<const Variable*> &variables, vector<shared_ptr<ADDFactor>> &factors,
+		set<unsigned> &prior, set<unsigned> &sensor, set<unsigned> &internals,
+		unordered_map<unsigned,const Variable*> &transition,
 		vector<unordered_map<unsigned,unsigned>> &observations)
 	{
 		// estimates
@@ -265,10 +287,17 @@ namespace dbn {
 			prior_model *= *factors[id];
 		}
 
-		// sensor model
+		// (generalized) sensor model
 		ADDFactor sensor_model;
 		for (auto id : sensor) {
-			sensor_model *= *factors[id];
+			sensor_model = sensor_model * *(factors[id]);
+		}
+		for (auto id : internals) {
+			sensor_model = sensor_model * *(factors[id]);
+		}
+		set<const Variable*> internal_variables;
+		for (auto id : internals) {
+			internal_variables.insert(variables[id]);
 		}
 
 		// initialize forward message
@@ -279,7 +308,8 @@ namespace dbn {
 			ADDFactor projection = project(factors, transition, forward);
 
 			// update belief state
-			forward = update(projection, sensor_model, evidence);
+			// forward = update(projection, internals, sensor_model, evidence);
+			forward = update(projection, internal_variables, sensor_model, evidence);
 
 			// add new estimate to filtering list
 			estimates.push_back(make_shared<ADDFactor>(forward));
@@ -292,7 +322,7 @@ namespace dbn {
 	vector<shared_ptr<Factor>>
 	unrolled_filtering(
 		vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors,
-		vector<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, vector<unsigned> &sensor,
+		set<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, set<unsigned> &sensor,
 		vector<unordered_map<unsigned,unsigned>> &observations,
 		bool verbose)
 	{

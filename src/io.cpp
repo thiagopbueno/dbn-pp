@@ -73,32 +73,46 @@ namespace dbn {
         }
     }
 
-    void read_prior_model(ifstream &input_file, unsigned &prior_order, vector<unsigned> &prior) {
-        read_next_integer(input_file, prior_order);
-        unsigned v;
-        for (unsigned i = 0; i < prior_order; ++i) {
-            read_next_integer(input_file, v);
-            prior.push_back(v);
-        }
-    }
+    void read_interface_model(
+        ifstream &input_file,
+        unsigned &interface_order, set<unsigned> &interface, set<unsigned> &prior,
+        unordered_map<unsigned,const Variable*> &transition, const vector<unique_ptr<Variable>> &variables) {
 
-    void read_transition_model(ifstream &input_file, unsigned &transition_order, unordered_map<unsigned,const Variable*> &transition, const vector<unique_ptr<Variable>> &variables) {
-        read_next_integer(input_file, transition_order);
+        read_next_integer(input_file, interface_order);
         unsigned curr, next;
-        for (unsigned i = 0; i < transition_order/2; ++i) {
+        for (unsigned i = 0; i < interface_order/2; ++i) {
             read_next_integer(input_file, curr);
             read_next_integer(input_file, next);
+            prior.insert(curr);
+            interface.insert(curr);
+            interface.insert(next);
             transition[next] = variables[curr].get();
         }
     }
 
-    void read_sensor_model(ifstream &input_file, unsigned &sensor_order, vector<unsigned> &sensor) {
+    void read_sensor_model(
+        ifstream &input_file,
+        unsigned &sensor_order, set<unsigned> &sensor) {
+
         read_next_integer(input_file, sensor_order);
         unsigned v;
         for (unsigned i = 0; i < sensor_order; ++i) {
             read_next_integer(input_file, v);
-            sensor.push_back(v);
+            sensor.insert(v);
         }
+    }
+
+    void read_internals_model(
+        vector<unique_ptr<Variable>> &variables,
+        unsigned &internals_order,
+        set<unsigned> &interface, set<unsigned> &sensor, set<unsigned> &internals) {
+
+        for (auto const &var : variables) {
+            unsigned id = var->id();
+            if (interface.count(id) || sensor.count(id)) continue;
+            internals.insert(id);
+        }
+        internals_order = internals.size();
     }
 
     void read_factors(ifstream &input_file, unsigned order, vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors) {
@@ -146,20 +160,26 @@ namespace dbn {
         vector<unique_ptr<Variable>> &variables,
         vector<shared_ptr<Factor>> &factors,
         vector<shared_ptr<ADDFactor>> &addfactors,
-        vector<unsigned> &prior,
-        unordered_map<unsigned,const Variable*> &transition,
-        vector<unsigned> &sensor) {
+        set<unsigned> &prior, set<unsigned> &interface, set<unsigned> &sensor, set<unsigned> &internals,
+        unordered_map<unsigned,const Variable*> &transition) {
 
         ifstream input_file(filename);
         if (input_file.is_open()) {
             read_file_header(input_file);
             read_variables(input_file, order, variables);
-            unsigned prior_order, transition_order, sensor_order;
-            read_prior_model(input_file, prior_order, prior);
-            read_transition_model(input_file, transition_order, transition, variables);
+
+            unsigned interface_order;
+            read_interface_model(input_file, interface_order, interface, prior, transition, variables);
+
+            unsigned sensor_order;
             read_sensor_model(input_file, sensor_order, sensor);
+
+            unsigned internals_order;
+            read_internals_model(variables, internals_order, interface, sensor, internals);
+
             read_factors(input_file, order, variables, factors);
             read_addfactors(factors, addfactors);
+
             input_file.close();
             return 0;
         }

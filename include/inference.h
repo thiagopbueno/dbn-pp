@@ -24,33 +24,29 @@
 #include "addfactor.h"
 
 #include <vector>
+#include <set>
 #include <memory>
 
 namespace dbn {
 
 	std::vector<std::shared_ptr<Factor>> unrolled_filtering(
-		std::vector<std::unique_ptr<Variable>> &variables,
-		std::vector<std::shared_ptr<Factor>> &factors,
-		std::vector<unsigned> &prior,
-		std::unordered_map<unsigned,const Variable*> &transition,
-		std::vector<unsigned> &sensor,
+		std::vector<std::unique_ptr<Variable>> &variables, std::vector<std::shared_ptr<Factor>> &factors,
+		std::set<unsigned> &prior, std::unordered_map<unsigned,const Variable*> &transition, std::set<unsigned> &sensor,
 		std::vector<std::unordered_map<unsigned,unsigned>> &observations,
 		bool verbose = false
 	);
 
 	std::vector<std::shared_ptr<Factor>> filtering(
-		std::vector<std::shared_ptr<Factor>> &factors,
-		std::vector<unsigned> &prior,
+		std::vector<const Variable*> &variables, std::vector<std::shared_ptr<Factor>> &factors,
+		std::set<unsigned> &prior, std::set<unsigned> &sensor, std::set<unsigned> &internals,
 		std::unordered_map<unsigned,const Variable*> &transition,
-		std::vector<unsigned> &sensor,
 		std::vector<std::unordered_map<unsigned,unsigned>> &observations
 	);
 
 	std::vector<std::shared_ptr<ADDFactor>> filtering(
-		std::vector<std::shared_ptr<ADDFactor>> &factors,
-		std::vector<unsigned> &prior,
+		std::vector<const Variable*> &variables, std::vector<std::shared_ptr<ADDFactor>> &factors,
+		std::set<unsigned> &prior, std::set<unsigned> &sensor, std::set<unsigned> &internals,
 		std::unordered_map<unsigned,const Variable*> &transition,
-		std::vector<unsigned> &sensor,
 		std::vector<std::unordered_map<unsigned,unsigned>> &observations
 	);
 

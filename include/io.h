@@ -34,11 +34,9 @@ namespace dbn {
 		const char *filename,
 		unsigned &order,
 		std::vector<std::unique_ptr<Variable>> &variables,
-		std::vector<std::shared_ptr<Factor>> &factors,
-		std::vector<std::shared_ptr<ADDFactor>> &addfactors,
-		std::vector<unsigned> &prior,
-		std::unordered_map<unsigned,const Variable*> &transition,
-		std::vector<unsigned> &sensor
+		std::vector<std::shared_ptr<Factor>> &factors, std::vector<std::shared_ptr<ADDFactor>> &addfactors,
+		std::set<unsigned> &prior, std::set<unsigned> &interface, std::set<unsigned> &sensor, std::set<unsigned> &internals,
+		std::unordered_map<unsigned,const Variable*> &transition
 	);
 
 	int read_observations(
