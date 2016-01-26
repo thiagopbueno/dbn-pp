@@ -20,10 +20,10 @@ dbn: $(OBJ)
 	$(CC) -o $@ $^ $(LIBS)
 
 bin/%.o: src/%.cpp include/%.h
-	$(CC) $(CCFLAGS) $(INCLUDE) -O0 -c -o $@ $<
+	$(CC) $(CCFLAGS) $(INCLUDE) -O3 -c -o $@ $<
 
 bin/main.o: src/main.cpp
-	$(CC) $(CCFLAGS) $(INCLUDE) -O0 -c -o $@ $<
+	$(CC) $(CCFLAGS) $(INCLUDE) -O3 -c -o $@ $<
 
 debug: dbn-debug
 	# valgrind --leak-check=full ./dbn-debug data/models/HMMs/enough-sleep.duai data/evidence/enough-sleep.duai.evid -v -m 123

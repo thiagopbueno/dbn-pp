@@ -53,6 +53,9 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    char *model = argv[1];
+    char *evidence = argv[2];
+
     bool verbose = false;
     bool m1 = false, m2 = false, m3 = false;
     if (read_options(argc, argv, verbose, m1, m2, m3)) return -1;
@@ -66,67 +69,105 @@ int main(int argc, char *argv[])
     unordered_map<unsigned,const Variable*> transition;
     vector<unsigned> sensor;
 
-    if (read_uai_model(argv[1], order, variables, factors, addfactors, prior, transition, sensor)) return -2;
-    cout << ">> NETWORK: " << argv[1] << endl;
-    if (verbose) {
-        print_model(variables, factors, prior, transition, sensor);
-    }
-    cout << endl;
+    // READ MODEL FROM FILE
+    if (read_uai_model(model, order, variables, factors, addfactors, prior, transition, sensor)) return -2;
 
+    unsigned nvariables = variables.size();
+    unsigned state_width = prior.size();
+    unsigned interface_width = transition.size();
+    unsigned observation_width = sensor.size();
+
+    if (verbose) {
+        cout << ">> NETWORK: " << model << endl;
+        cout << "number of state variables       = " << state_width << endl;
+        cout << "number of interface variables   = " << interface_width << endl;
+        cout << "number of observation variables = " << observation_width << endl;
+        cout << "total number of variables       = " << nvariables << endl;
+        cout << endl;
+        // print_model(variables, factors, prior, transition, sensor);
+        // cout << endl;
+    }
+
+    // READ EVIDENCE FROM FILE
     vector<unordered_map<unsigned,unsigned>> observations;
     set<unsigned> state_variables;
-    if (read_observations(argv[2], observations, state_variables)) return -3;
+    if (read_observations(evidence, observations, state_variables)) return -3;
     int T = observations.size();
-
-    cout << ">> OBSERVATIONS: " << argv[2] << endl;
-    cout << "timeslices = " << T << endl;
     if (verbose) {
-        print_observations(observations);
+        cout << ">> OBSERVATIONS: " << evidence << endl;
+        cout << "number of timeslices = " << T << endl << endl;
+        // print_observations(observations);
+        // cout << endl;
     }
-    cout << endl;
 
-    cout << ">> FILTERING: " << endl << endl;
-
+    // COMPUTE FILTERING
     if (m1) {
-        cout << "@ Unrolled filtering:" << endl;
         auto start = chrono::steady_clock::now();
         vector<shared_ptr<Factor>> states1 = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
         auto end = chrono::steady_clock::now();
         auto diff = end - start;
-        cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
-        cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
+
         if (verbose) {
+            cout << "@ Unrolled filtering: ";
+            cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
+            cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
             print_trajectory<Factor>(states1, state_variables);
+            cout << endl;
         }
-        cout << endl;
+        else {
+            cout << model << ";";
+            cout << 1 << ";";
+            cout << T << ";";
+            cout << state_width << ";" << interface_width << ";" << observation_width << ";";
+            cout << chrono::duration <double, milli> (diff).count() << ";";
+            cout << chrono::duration <double, milli> (diff).count() / T << endl;
+        }
     }
 
     if (m2) {
-        cout << "@ Forward filtering:" << endl;
         auto start = chrono::steady_clock::now();
         vector<shared_ptr<Factor>> states2 = filtering(factors, prior, transition, sensor, observations);
         auto end = chrono::steady_clock::now();
         auto diff = end - start;
-        cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
-        cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
+
         if (verbose) {
+            cout << "@ Forward filtering: ";
+            cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
+            cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
             print_trajectory<Factor>(states2, state_variables);
+            cout << endl;
         }
-        cout << endl;
+        else {
+            cout << model << ";";
+            cout << 2 << ";";
+            cout << T << ";";
+            cout << state_width << ";" << interface_width << ";" << observation_width << ";";
+            cout << chrono::duration <double, milli> (diff).count() << ";";
+            cout << chrono::duration <double, milli> (diff).count() / T << endl;
+        }
     }
 
     if (m3) {
-        cout << "@ Forward ADD filtering:" << endl;
         auto start = chrono::steady_clock::now();
         vector<shared_ptr<ADDFactor>> states3 = filtering(addfactors, prior, transition, sensor, observations);
         auto end = chrono::steady_clock::now();
         auto diff = end - start;
-        cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
-        cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
+
         if (verbose) {
+            cout << "@ Forward ADD filtering: ";
+            cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
+            cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
             print_trajectory<ADDFactor>(states3, state_variables);
+            cout << endl;
         }
-        cout << endl;
+        else {
+            cout << model << ";";
+            cout << 3 << ";";
+            cout << T << ";";
+            cout << state_width << ";" << interface_width << ";" << observation_width << ";";
+            cout << chrono::duration <double, milli> (diff).count() << ";";
+            cout << chrono::duration <double, milli> (diff).count() / T << endl;
+        }
     }
 
     return 0;
