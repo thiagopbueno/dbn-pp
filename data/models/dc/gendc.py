@@ -176,55 +176,69 @@ def factors(inputs, gates, health, domains):
 if __name__ == '__main__':
 	import sys
 	import functools
-	if len(sys.argv) < 6:
-		print("usage: {} <filename> <inputs> <gates> <outputs> <health>".format(sys.argv[0]))
+
+	if len(sys.argv) < 7:
+		print("usage: {} <filename> <inputs> <gates> <outputs> <health> <observations>".format(sys.argv[0]))
 		exit(-1)
+
+	# arguments
 	filename = sys.argv[1]
 	inputs = int(sys.argv[2])
 	gates = int(sys.argv[3])
 	outputs = int(sys.argv[4])
 	health = int(sys.argv[5])
-	
-	with open(filename, mode='w', encoding='utf-8') as model:
-		# DBAYES
-		model.write(model_type() + '\n\n')
+	observations = int(sys.argv[6])
 
-		# variables
+	model_vars = list(map(str, variables(inputs, gates, health)))
+	prior_vars = list(map(str, prior(inputs, gates, health)))
+	transition_vars = list(map(str, transition(inputs, gates, health)))
+	sensor_vars = list(map(str, sensor(inputs, gates, outputs)))
+	domains = domain(inputs, gates, health)
+	factors_lst = factors(inputs, gates, health, domains)
+
+	with open(filename + '.duai', mode='w', encoding='utf-8') as model:
+		model.write(model_type() + "\n\n")
+
 		model.write("# Variables\n")
-		model_vars = list(map(str, variables(inputs, gates, health)))
-		model.write(model_vars[0] + '\n')
-		model.write(' '.join(model_vars[1:]) + '\n\n')
+		model.write(model_vars[0] + "\n")
+		model.write(' '.join(model_vars[1:]) + "\n\n")
 
-		# prior
 		model.write("# Prior\n")
-		prior_vars = list(map(str, prior(inputs, gates, health)))
-		model.write(prior_vars[0] + '\n')
-		model.write(' '.join(prior_vars[1:]) + '\n\n')
+		model.write(prior_vars[0] + "\n")
+		model.write(' '.join(prior_vars[1:]) + "\n\n")
 
-		# 2TBN
 		model.write("# 2TBN\n")
-		transition_vars = list(map(str, transition(inputs, gates, health)))
-		model.write(transition_vars[0] + '\n')
-		model.write(' '.join(transition_vars[1:]) + '\n\n')
+		model.write(transition_vars[0] + "\n")
+		model.write(' '.join(transition_vars[1:]) + "\n\n")
 
-		# sensor
 		model.write("# Sensor\n")
-		sensor_vars = list(map(str, sensor(inputs, gates, outputs)))
-		model.write(sensor_vars[0] + '\n')
-		model.write(' '.join(sensor_vars[1:]) + '\n\n')
+		model.write(sensor_vars[0] + "\n")
+		model.write(' '.join(sensor_vars[1:]) + "\n\n")
 
-		# domains
 		model.write("# Domains\n")
-		domains = domain(inputs, gates, health)
 		for domain in domains:
 			domain_vars = list(map(str, domain))
-			model.write(' '.join(domain_vars) + '\n')
-		model.write('\n')
+			model.write(' '.join(domain_vars) + "\n")
+		model.write("\n")
 
-		# factors
 		model.write("# Factors\n")
-		factors_lst = factors(inputs, gates, health, domains)
 		for factor in factors_lst:
 			factor_values = list(map(str, factor))
-			model.write(' '.join(factor_values) + '\n')
-		model.write('\n')
+			model.write(' '.join(factor_values) + "\n")
+		model.write("\n")
+
+	with open(filename + '.duai.evid', mode='w', encoding='utf-8') as evidence:
+		nsensors = str(sensor_vars[0])
+		nobservations = str(observations)
+		evidence.write("{} {}\n".format(nsensors, nobservations))
+
+		for sensor_id in sensor_vars[1:]:
+			evidence.write(str(sensor_id))
+			for i in range(observations):
+				evidence.write(" {}".format(str(random.choice([0,1]))))
+			evidence.write("\n")
+
+		evidence.write(str(int(transition_vars[0])//2))
+		for var_id in transition_vars[1::2]:
+			evidence.write(" {}".format(str(var_id)))
+		evidence.write("\n")
