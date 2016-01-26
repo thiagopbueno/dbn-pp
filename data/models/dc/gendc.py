@@ -31,18 +31,12 @@ def transition(inputs, gates, health):
 		i += 2
 	return transition_vars
 
-def sensor(inputs, gates, outputs):
-	total = inputs + outputs
+def sensor(inputs, gates):
+	total = inputs + 1
 	sensor_vars = [total]
 	for i in range(inputs):
 		sensor_vars.append(i)
-	output_gates = set()
-	for j in range(outputs):
-		output = random.randint(inputs, inputs+outputs-1)
-		while output in output_gates:
-			output = random.randint(inputs, inputs+outputs-1)
-		sensor_vars.append(output)
-		output_gates.add(output)
+	sensor_vars.append(inputs+gates-1)
 	return sensor_vars
 
 def domain(inputs, gates, health):
@@ -54,7 +48,11 @@ def domain(inputs, gates, health):
 		domains.append(domain)
 
 	# gates
-	for j in range(inputs, inputs+gates):
+	health_vars = list(range(health))
+	random.shuffle(health_vars)
+
+	health_index = 0
+	for j in range(inputs, inputs+gates-1):
 		domain = []
 
 		# choose gate type [and, or, not]
@@ -69,21 +67,34 @@ def domain(inputs, gates, health):
 		# gate output variable
 		domain.append(j)
 
-		# gate input variables
-		gate_inputs = {j}
-		for l in range(fan_in):
+		if fan_in == 2:
+			# first gate input from input wires
+			gate_input = random.randint(0, inputs-1)
+			domain.append(gate_input)
+
+			# second gate input random
 			gate_input = random.randint(0, j-1)
-			while gate_input in gate_inputs:
+			while gate_input == domain[-1]:
 				gate_input = random.randint(0, j-1)
 			domain.append(gate_input)
-			gate_inputs.add(gate_input)
+		elif fan_in == 1:
+			gate_input = random.randint(0, j-1)
+			domain.append(gate_input)
 
 		# gate health variable
-		gate_health = random.randint(0, health-1)
+		gate_health = health_vars[health_index]
 		domain.append(inputs + gates + 2*gate_health)
+		health_index = (health_index + 1) % health
 
 		domains.append(domain)
-		
+
+	# last gate = output
+	j = inputs+gates-1
+	domain = [4, j, j-1, j-2]
+	gate_health = health_vars[health_index]
+	domain.append(inputs + gates + 2*gate_health)
+	domains.append(domain)
+
 	# health
 	curr = True
 	for k in range(inputs+gates, inputs+gates+2*health):
@@ -177,22 +188,21 @@ if __name__ == '__main__':
 	import sys
 	import functools
 
-	if len(sys.argv) < 7:
-		print("usage: {} <filename> <inputs> <gates> <outputs> <health> <observations>".format(sys.argv[0]))
+	if len(sys.argv) < 6:
+		print("usage: {} <filename> <inputs> <gates> <health> <observations>".format(sys.argv[0]))
 		exit(-1)
 
 	# arguments
 	filename = sys.argv[1]
 	inputs = int(sys.argv[2])
 	gates = int(sys.argv[3])
-	outputs = int(sys.argv[4])
-	health = int(sys.argv[5])
-	observations = int(sys.argv[6])
+	health = int(sys.argv[4])
+	observations = int(sys.argv[5])
 
 	model_vars = list(map(str, variables(inputs, gates, health)))
 	prior_vars = list(map(str, prior(inputs, gates, health)))
 	transition_vars = list(map(str, transition(inputs, gates, health)))
-	sensor_vars = list(map(str, sensor(inputs, gates, outputs)))
+	sensor_vars = list(map(str, sensor(inputs, gates)))
 	domains = domain(inputs, gates, health)
 	factors_lst = factors(inputs, gates, health, domains)
 

@@ -6,17 +6,16 @@ import unittest
 class TestGendc(unittest.TestCase):
 
 	@classmethod
-	def setUp(cls):
+	def setUpClass(cls):
 		cls.inputs = 2
 		cls.gates = 2
 		cls.health = 2
-		cls.outputs = cls.gates//2
 		cls.total_number_vars = cls.inputs + cls.gates + 2*cls.health
 		cls.model_type = gendc.model_type()
 		cls.model_vars = gendc.variables(cls.inputs, cls.gates, cls.health)
 		cls.prior_vars = gendc.prior(cls.inputs, cls.gates, cls.health)
 		cls.transition_vars = gendc.transition(cls.inputs, cls.gates, cls.health)
-		cls.sensor_vars = gendc.sensor(cls.inputs, cls.gates, cls.outputs)
+		cls.sensor_vars = gendc.sensor(cls.inputs, cls.gates)
 		cls.domains = gendc.domain(cls.inputs, cls.gates, cls.health)
 		cls.factors = gendc.factors(cls.inputs, cls.gates, cls.health, cls.domains)
 
@@ -44,7 +43,7 @@ class TestGendc(unittest.TestCase):
 			i += 1
 
 	def test_sensor(self):
-		total_wires = self.inputs + self.outputs
+		total_wires = self.inputs + 1
 		self.assertEqual(self.sensor_vars[0], total_wires)
 		self.assertEqual(len(self.sensor_vars), total_wires+1)
 		for i in range(1, self.inputs+1):
