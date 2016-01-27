@@ -32,52 +32,66 @@ namespace dbn {
 		vector<const Variable*> &variables,
 		vector<shared_ptr<Factor>> &factors) {
 
-	    forward_list<shared_ptr<Factor>> flist(factors.begin(), factors.end());
-	    forward_list<shared_ptr<Factor>> bucket;
+		// initialize result
+		Factor result(1.0);
 
-	    Graph g(factors);
-		vector<const Variable*> ordering = g.ordering(variables);
+		// choose elimination ordering
+		forward_list<const Variable*> ordering(variables.begin(), variables.end());
+		// Graph g(factors);
+		// vector<const Variable*> new_ordering = g.ordering(variables);
+		// forward_list<const Variable*> ordering(new_ordering.begin(), new_ordering.end());
 
-		for (auto var: ordering) {
-
-			// select all factors with var in its scope
-			bucket.clear();
-			unsigned b = 0; // bucket size
-
-			forward_list<shared_ptr<Factor>>::const_iterator pf;
-
-			forward_list<shared_ptr<Factor>> new_flist;
-			for (pf = flist.begin(); pf != flist.end(); ++pf) {
-
-				if ((*pf)->domain().in_scope(var)) {
-					bucket.push_front(*pf);
-					b++;
-				}
-				else {
-					new_flist.push_front(*pf);
+		// initialize buckets
+		unordered_map<unsigned,set<shared_ptr<Factor>>> buckets;
+		for (auto pv : ordering) {
+			set<shared_ptr<Factor>> bfactors;
+			buckets[pv->id()] = bfactors;
+		}
+		for (auto pf : factors) {
+			bool in_bucket = false;
+			for (auto pv : ordering) {
+				if (pf->domain().in_scope(pv)) {
+					buckets[pv->id()].insert(pf);
+					in_bucket = true;
+					break;
 				}
 			}
-
-			flist = new_flist;
-
-			// multiply all factors in bucket and eliminate variable
-			if (b > 0) {
-				Factor prod(1.0);
-				for (auto const& f : bucket) {
-					prod *= *f;
-				}
-				shared_ptr<Factor> p = make_shared<Factor>(prod.sum_out(var));
-
-				new_flist.push_front(move(p));
-	  		}
-
-	  		flist = new_flist;
+			if (!in_bucket) {
+				result *= *pf;
+			}
 		}
 
-		// generate result by multiplying all remaining factors in the pool
-		Factor result(1.0);
-		for (auto &f : flist) {
-			result *= *f;
+		// eliminate all variables
+		while (!ordering.empty()) {
+			const Variable *var = ordering.front();
+			ordering.pop_front();
+
+			// eliminate var
+			Factor prod(1.0);
+			for (auto pf : buckets[var->id()]) {
+				prod *= *pf;
+			}
+			shared_ptr<Factor> new_factor = make_shared<Factor>(prod.sum_out(var));
+
+			// stop if finished
+			if (buckets.empty()) {
+				result *= *new_factor;
+				// cout << *result << endl;
+				break;
+			}
+
+			// update bucket list with new factor
+			bool in_bucket = false;
+			for (auto pv : ordering) {
+				if (new_factor->domain().in_scope(pv)) {
+					buckets[pv->id()].insert(new_factor);
+					in_bucket = true;
+					break;
+				}
+			}
+			if (!in_bucket) {
+				result *= *new_factor;
+			}
 		}
 
 		return result;
@@ -147,11 +161,11 @@ namespace dbn {
 		for (auto id : internals) {
 			sensor_factors.push_back(factors[id]);
 		}
-		vector<const Variable*> internal_variables2;
+		vector<const Variable*> internal_variables;
 		for (auto id : internals) {
-			internal_variables2.push_back(variables[id]);
+			internal_variables.push_back(variables[id]);
 		}
-		Factor sensor_model = variable_elimination(internal_variables2, sensor_factors);
+		Factor sensor_model = variable_elimination(internal_variables, sensor_factors);
 
 		// initialize forward message
 		Factor forward = prior_model;
@@ -284,11 +298,11 @@ namespace dbn {
 		for (auto id : internals) {
 			sensor_factors.push_back(factors[id]);
 		}
-		vector<const Variable*> internal_variables2;
+		vector<const Variable*> internal_variables;
 		for (auto id : internals) {
-			internal_variables2.push_back(variables[id]);
+			internal_variables.push_back(variables[id]);
 		}
-		ADDFactor sensor_model = variable_elimination(internal_variables2, sensor_factors);
+		ADDFactor sensor_model = variable_elimination(internal_variables, sensor_factors);
 
 		// initialize forward message
 		ADDFactor forward = prior_model;
@@ -374,6 +388,7 @@ namespace dbn {
 		}
 
 		Factor estimate = variable_elimination(ordering, unrolled_factors).normalize();
+
 		unordered_map<unsigned,const Variable *> renaming_back;
 		const Domain &estimate_domain = estimate.domain();
 		const unsigned estimate_width = estimate_domain.width();
