@@ -27,6 +27,7 @@
 #include <set>
 #include <memory>
 #include <chrono>
+#include <algorithm>
 
 #include "addfactor.h"
 
@@ -303,7 +304,10 @@ print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables)
         states[i] = make_shared<T>(f);
     }
 
-    const Domain &domain = states[0]->domain();
+    vector<const Variable*> scope = states[0]->domain().scope();
+    sort(scope.begin(), scope.end(), [](const Variable *v1, const Variable *v2) { return v1->id() < v2->id(); });
+
+    const Domain domain(scope);
     for (unsigned i = 0; i < domain.width(); ++i) {
         cout << domain[i]->id() << " ";
     }
