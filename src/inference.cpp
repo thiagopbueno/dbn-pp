@@ -189,49 +189,66 @@ namespace dbn {
 		vector<const Variable*> &variables,
 		vector<shared_ptr<ADDFactor>> &factors) {
 
-	    forward_list<shared_ptr<ADDFactor>> flist(factors.begin(), factors.end());
-	    forward_list<shared_ptr<ADDFactor>> bucket;
+		// initialize result
+		ADDFactor result;
 
-		for (auto var: variables) {
+		// choose elimination ordering
+		forward_list<const Variable*> ordering(variables.begin(), variables.end());
+		// Graph g(factors);
+		// vector<const Variable*> new_ordering = g.ordering(variables);
+		// forward_list<const Variable*> ordering(new_ordering.begin(), new_ordering.end());
 
-			// select all factors with var in its scope
-			bucket.clear();
-			unsigned b = 0; // bucket size
-
-			forward_list<shared_ptr<ADDFactor>>::const_iterator pf;
-
-			forward_list<shared_ptr<ADDFactor>> new_flist;
-			for (pf = flist.begin(); pf != flist.end(); ++pf) {
-
-				if ((*pf)->in_scope(var)) {
-					bucket.push_front(*pf);
-					b++;
-				}
-				else {
-					new_flist.push_front(*pf);
+		// initialize buckets
+		unordered_map<unsigned,set<shared_ptr<ADDFactor>>> buckets;
+		for (auto pv : ordering) {
+			set<shared_ptr<ADDFactor>> bfactors;
+			buckets[pv->id()] = bfactors;
+		}
+		for (auto pf : factors) {
+			bool in_bucket = false;
+			for (auto pv : ordering) {
+				if (pf->domain().in_scope(pv)) {
+					buckets[pv->id()].insert(pf);
+					in_bucket = true;
+					break;
 				}
 			}
-
-			flist = new_flist;
-
-			// multiply all factors in bucket and eliminate variable
-			if (b > 0) {
-				ADDFactor prod;
-				for (auto const& f : bucket) {
-					prod *= *f;
-				}
-				shared_ptr<ADDFactor> p = make_shared<ADDFactor>(prod.sum_out(var));
-
-				new_flist.push_front(move(p));
+			if (!in_bucket) {
+				result *= *pf;
 			}
-
-			flist = new_flist;
 		}
 
-		// generate result by multiplying all remaining factors in the pool
-		ADDFactor result;
-		for (auto &f : flist) {
-			result *= *f;
+		// eliminate all variables
+		while (!ordering.empty()) {
+			const Variable *var = ordering.front();
+			ordering.pop_front();
+
+			// eliminate var
+			ADDFactor prod;
+			for (auto pf : buckets[var->id()]) {
+				prod *= *pf;
+			}
+			shared_ptr<ADDFactor> new_factor = make_shared<ADDFactor>(prod.sum_out(var));
+
+			// stop if finished
+			if (buckets.empty()) {
+				result *= *new_factor;
+				// cout << *result << endl;
+				break;
+			}
+
+			// update bucket list with new factor
+			bool in_bucket = false;
+			for (auto pv : ordering) {
+				if (new_factor->domain().in_scope(pv)) {
+					buckets[pv->id()].insert(new_factor);
+					in_bucket = true;
+					break;
+				}
+			}
+			if (!in_bucket) {
+				result *= *new_factor;
+			}
 		}
 
 		return result;
