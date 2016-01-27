@@ -111,17 +111,11 @@ namespace dbn {
 
 	Factor update(
 		const Factor &projection,
-		const set<const Variable*> &internals,
 		const Factor &sensor_model,
 		const unordered_map<unsigned,unsigned> &evidence) {
 
 		// add observation from time t
 		Factor evidence_t = sensor_model.conditioning(evidence);
-
-		// sum out internal nodes
-		for (auto var : internals) {
-			evidence_t = evidence_t.sum_out(var);
-		}
 
 		// update projection with observation
 		Factor belief_state = evidence_t * projection;
@@ -146,17 +140,18 @@ namespace dbn {
 		}
 
 		// (generalized) sensor model
-		Factor sensor_model(1.0);
+		vector<shared_ptr<Factor>> sensor_factors;
 		for (auto id : sensor) {
-			sensor_model = sensor_model * *(factors[id]);
+			sensor_factors.push_back(factors[id]);
 		}
 		for (auto id : internals) {
-			sensor_model = sensor_model * *(factors[id]);
+			sensor_factors.push_back(factors[id]);
 		}
-		set<const Variable*> internal_variables;
+		vector<const Variable*> internal_variables2;
 		for (auto id : internals) {
-			internal_variables.insert(variables[id]);
+			internal_variables2.push_back(variables[id]);
 		}
+		Factor sensor_model = variable_elimination(internal_variables2, sensor_factors);
 
 		// initialize forward message
 		Factor forward = prior_model;
@@ -166,7 +161,7 @@ namespace dbn {
 			Factor projection = project(factors, transition, forward);
 
 			// update belief state
-			forward = update(projection, internal_variables, sensor_model, evidence);
+			forward = update(projection, sensor_model, evidence);
 
 			// add new estimate to filtering list
 			estimates.push_back(make_shared<Factor>(forward));
@@ -254,17 +249,11 @@ namespace dbn {
 
 	ADDFactor update(
 		const ADDFactor &projection,
-		const set<const Variable*> &internals,
 		const ADDFactor &sensor_model,
 		const unordered_map<unsigned,unsigned> &evidence) {
 
 		// add observation from time t
 		ADDFactor evidence_t = sensor_model.conditioning(evidence);
-
-		// sum out internal nodes
-		for (auto var : internals) {
-			evidence_t = evidence_t.sum_out(var);
-		}
 
 		// update projection with observation
 		ADDFactor belief_state = evidence_t * projection;
@@ -288,17 +277,18 @@ namespace dbn {
 		}
 
 		// (generalized) sensor model
-		ADDFactor sensor_model;
+		vector<shared_ptr<ADDFactor>> sensor_factors;
 		for (auto id : sensor) {
-			sensor_model = sensor_model * *(factors[id]);
+			sensor_factors.push_back(factors[id]);
 		}
 		for (auto id : internals) {
-			sensor_model = sensor_model * *(factors[id]);
+			sensor_factors.push_back(factors[id]);
 		}
-		set<const Variable*> internal_variables;
+		vector<const Variable*> internal_variables2;
 		for (auto id : internals) {
-			internal_variables.insert(variables[id]);
+			internal_variables2.push_back(variables[id]);
 		}
+		ADDFactor sensor_model = variable_elimination(internal_variables2, sensor_factors);
 
 		// initialize forward message
 		ADDFactor forward = prior_model;
@@ -309,7 +299,7 @@ namespace dbn {
 
 			// update belief state
 			// forward = update(projection, internals, sensor_model, evidence);
-			forward = update(projection, internal_variables, sensor_model, evidence);
+			forward = update(projection, sensor_model, evidence);
 
 			// add new estimate to filtering list
 			estimates.push_back(make_shared<ADDFactor>(forward));
