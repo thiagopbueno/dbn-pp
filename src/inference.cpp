@@ -321,23 +321,20 @@ namespace dbn {
 
 	vector<shared_ptr<Factor>>
 	unrolled_filtering(
-		vector<unique_ptr<Variable>> &variables, vector<shared_ptr<Factor>> &factors,
-		set<unsigned> &prior, unordered_map<unsigned,const Variable*> &transition, set<unsigned> &sensor,
+		vector<const Variable*> variables, vector<shared_ptr<Factor>> &factors,
+		set<unsigned> &prior, set<unsigned> &sensor, set<unsigned> &internals,
+		unordered_map<unsigned,const Variable*> &transition,
 		vector<unordered_map<unsigned,unsigned>> &observations,
 		bool verbose)
 	{
 
-		vector<const Variable*> vars;
 		vector<shared_ptr<Factor>> estimates;
 
 		int N = variables.size();
-		for (auto const &pv : variables) {
-			vars.push_back(pv.get());
-		}
 
 		unordered_map<unsigned,const Variable *> renaming;
 		for (auto it_transition : transition) {
-			const Variable *next_var = vars[it_transition.first];
+			const Variable *next_var = variables[it_transition.first];
 			unsigned curr_id = it_transition.second->id();
 			renaming[curr_id] = next_var;
 		}
@@ -352,7 +349,15 @@ namespace dbn {
 			unrolled_factors.push_back(factors[id_next]);
 
 			unsigned id_curr = it_transition.second->id();
-			ordering.push_back(vars[id_curr]);
+			ordering.push_back(variables[id_curr]);
+		}
+		for (auto internal_id : internals) {
+			Factor internal_factor(*factors[internal_id]);
+			internal_factor = internal_factor.change_variables(renaming);
+			Factor new_factor = internal_factor.conditioning(observations[0]).normalize();
+			unrolled_factors.push_back(make_shared<Factor>(new_factor));
+
+			ordering.push_back(variables[internal_id]);
 		}
 		for (auto sensor_id : sensor) {
 			Factor sensor_factor(*factors[sensor_id]);
@@ -375,7 +380,7 @@ namespace dbn {
 			for (auto pv : ordering) {
 				cout << pv->id() << " ";
 			}
-			cout << endl;
+			cout << endl << endl;
 		}
 
 		Factor estimate = variable_elimination(ordering, unrolled_factors).normalize();
@@ -387,10 +392,22 @@ namespace dbn {
 				unsigned id_from = it_renaming.first;
 				unsigned id_to = it_renaming.second->id();
 				if (id_to == var_id) {
-					renaming_back[var_id] = vars[id_from];
+					renaming_back[var_id] = variables[id_from];
 				}
 			}
 		}
+
+		if (verbose) {
+			cout << "Renaming" << endl;
+			for (auto it : renaming) {
+				cout << it.first << ":" << it.second->id() << endl;
+			}
+			cout << "Renaming back" << endl;
+			for (auto it : renaming_back) {
+				cout << it.first << ":" << it.second->id() << endl;
+			}
+		}
+
 		estimate = estimate.change_variables(renaming_back);
 		estimates.push_back(make_shared<Factor>(estimate));
 
@@ -409,9 +426,9 @@ namespace dbn {
 				unsigned id_next = it_transition.first;
 				unsigned id_curr = it_transition.second->id();
 
-				const Variable *new_var = new Variable(id, vars[id_next]->size());
+				const Variable *new_var = new Variable(id, variables[id_next]->size());
 				renaming[id_next] = new_var;
-				vars.push_back(new_var);
+				variables.push_back(new_var);
 				id++;
 
 				Factor *new_factor = new Factor(*factors[id_next]);
@@ -427,12 +444,30 @@ namespace dbn {
 				renaming[id_curr] = renaming[id_next];
 			}
 
-			for (auto sensor_id : sensor) {
-				const Variable *new_var = new Variable(id, vars[sensor_id]->size());
-				renaming[sensor_id] = new_var;
-				vars.push_back(new_var);
+
+			for (auto internal_id : internals) {
+				const Variable *new_var = new Variable(id, variables[internal_id]->size());
+				renaming[internal_id] = new_var;
+				variables.push_back(new_var);
 				id++;
 
+				ordering.push_back(new_var);
+			}
+			for (auto sensor_id : sensor) {
+				const Variable *new_var = new Variable(id, variables[sensor_id]->size());
+				renaming[sensor_id] = new_var;
+				variables.push_back(new_var);
+				id++;
+			}
+
+
+			for (auto internal_id : internals) {
+				Factor *internal_factor = factors[internal_id].get();
+				Factor new_factor = internal_factor->conditioning(observations[t]).normalize();
+				new_factor = new_factor.change_variables(renaming);
+				unrolled_factors.push_back(make_shared<Factor>(new_factor));
+			}
+			for (auto sensor_id : sensor) {
 				Factor *sensor_factor = factors[sensor_id].get();
 				Factor new_factor = sensor_factor->conditioning(observations[t]).normalize();
 				new_factor = new_factor.change_variables(renaming);
@@ -448,7 +483,7 @@ namespace dbn {
 				for (auto pv : ordering) {
 					cout << pv->id() << " ";
 				}
-				cout << endl;
+				cout << endl << endl;
 			}
 
 			Factor estimate = variable_elimination(ordering, unrolled_factors).normalize();
@@ -460,17 +495,29 @@ namespace dbn {
 					unsigned id_from = it_renaming.first;
 					unsigned id_to = it_renaming.second->id();
 					if (id_to == var_id) {
-						renaming_back[var_id] = vars[id_from];
+						renaming_back[var_id] = variables[id_from];
 					}
 				}
 			}
+
+			if (verbose) {
+				cout << "Renaming" << endl;
+				for (auto it : renaming) {
+					cout << it.first << ":" << it.second->id() << endl;
+				}
+				cout << "Renaming back" << endl;
+				for (auto it : renaming_back) {
+					cout << it.first << ":" << it.second->id() << endl;
+				}
+			}
+
 			estimate = estimate.change_variables(renaming_back);
 			estimates.push_back(make_shared<Factor>(estimate));
 		}
 
-		unsigned vars_sz = vars.size();
-		for (unsigned i = N; i < vars_sz; ++i) {
-			delete vars[i];
+		unsigned variables_sz = variables.size();
+		for (unsigned i = N; i < variables_sz; ++i) {
+			delete variables[i];
 		}
 
 		return estimates;

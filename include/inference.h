@@ -30,8 +30,9 @@
 namespace dbn {
 
 	std::vector<std::shared_ptr<Factor>> unrolled_filtering(
-		std::vector<std::unique_ptr<Variable>> &variables, std::vector<std::shared_ptr<Factor>> &factors,
-		std::set<unsigned> &prior, std::unordered_map<unsigned,const Variable*> &transition, std::set<unsigned> &sensor,
+		std::vector<const Variable*> variables, std::vector<std::shared_ptr<Factor>> &factors,
+		std::set<unsigned> &prior, std::set<unsigned> &sensor, std::set<unsigned> &internals,
+		std::unordered_map<unsigned,const Variable*> &transition,
 		std::vector<std::unordered_map<unsigned,unsigned>> &observations,
 		bool verbose = false
 	);

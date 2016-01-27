@@ -111,12 +111,12 @@ int main(int argc, char *argv[])
     // COMPUTE FILTERING
     if (m1) {
         auto start = chrono::steady_clock::now();
-        vector<shared_ptr<Factor>> states1 = unrolled_filtering(variables, factors, prior, transition, sensor, observations);
+        vector<shared_ptr<Factor>> states1 = unrolled_filtering(vars, factors, prior, sensor, internals, transition, observations);
         auto end = chrono::steady_clock::now();
         auto diff = end - start;
 
         if (verbose) {
-            cout << ">> Unrolled filtering: ";
+            cout << ">> UNROLLED VARIABLE ELIMINATION:" << endl;
             cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
             cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
             print_trajectory<Factor>(states1, state_variables);
@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
         auto diff = end - start;
 
         if (verbose) {
-            cout << ">> Forward filtering: ";
+            cout << ">> INTERFACE:" << endl;
             cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
             cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
             print_trajectory<Factor>(states2, state_variables);
@@ -157,13 +157,12 @@ int main(int argc, char *argv[])
 
     if (m3) {
         auto start = chrono::steady_clock::now();
-        // vector<shared_ptr<ADDFactor>> states3 = filtering(vars, addfactors, prior, sensor, transition, sensor, observations);
         vector<shared_ptr<ADDFactor>> states3 = filtering(vars, addfactors, prior, sensor, internals, transition, observations);
         auto end = chrono::steady_clock::now();
         auto diff = end - start;
 
         if (verbose) {
-            cout << ">> Forward ADD filtering: ";
+            cout << ">> INTERFACE with ADDs:" << endl;
             cout << "total time = " << chrono::duration <double, milli> (diff).count() << " ms, ";
             cout << "time per slice = " << chrono::duration <double, milli> (diff).count() / T << " ms." << endl;
             print_trajectory<ADDFactor>(states3, state_variables);
