@@ -303,17 +303,17 @@ print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables)
         states[i] = make_shared<T>(f);
     }
 
-    const Domain &new_domain = states[0]->domain();
-    for (unsigned i = 0; i < new_domain.width(); ++i) {
-        cout << new_domain[i]->id() << " ";
+    const Domain &domain = states[0]->domain();
+    for (unsigned i = 0; i < domain.width(); ++i) {
+        cout << domain[i]->id() << " ";
     }
     cout << endl;
 
     cout.precision(3);
     cout << fixed;
 
-    std::vector<unsigned> inst(new_domain.width(), 0);
-    for (unsigned i = 0; i < new_domain.size(); ++i) {
+    std::vector<unsigned> inst(domain.width(), 0);
+    for (unsigned i = 0; i < domain.size(); ++i) {
 
         // print instantiation
         for (auto d : inst) {
@@ -323,12 +323,21 @@ print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables)
 
         // print value trajectory
         for (auto const& pf : states) {
-            cout << " " << (*pf)[inst];
+            const Domain &d = pf->domain();
+            unsigned w = d.width();
+            std::vector<unsigned> inst2(w, 0);
+
+            for (unsigned j = 0; j < w; ++j) {
+                const Variable *v = d[j];
+                inst2[j] = inst[domain[v]];
+            }
+
+            cout << " " << (*pf)[inst2];
         }
         cout << endl;
 
         // update instantiation
-        new_domain.next_instantiation(inst);
+        domain.next_instantiation(inst);
     }
     cout << endl;
 }
