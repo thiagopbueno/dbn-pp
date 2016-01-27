@@ -330,7 +330,7 @@ namespace dbn {
 
 		vector<shared_ptr<Factor>> estimates;
 
-		int N = variables.size();
+		const int N = variables.size();
 
 		unordered_map<unsigned,const Variable *> renaming;
 		for (auto it_transition : transition) {
@@ -386,7 +386,8 @@ namespace dbn {
 		Factor estimate = variable_elimination(ordering, unrolled_factors).normalize();
 		unordered_map<unsigned,const Variable *> renaming_back;
 		const Domain &estimate_domain = estimate.domain();
-		for (unsigned i = 0; i < estimate_domain.width(); ++i) {
+		const unsigned estimate_width = estimate_domain.width();
+		for (unsigned i = 0; i < estimate_width; ++i) {
 			unsigned var_id = estimate_domain[i]->id();
 			for (auto it_renaming : renaming) {
 				unsigned id_from = it_renaming.first;
@@ -412,7 +413,8 @@ namespace dbn {
 		estimates.push_back(make_shared<Factor>(estimate));
 
 		unsigned id = factors.size();
-		for (unsigned t = 1; t < observations.size(); ++t) {
+		const unsigned T = observations.size();
+		for (unsigned t = 1; t < T; ++t) {
 
 			if (verbose) {
 				cout << "@ t = " << t+1 << endl;
@@ -489,7 +491,8 @@ namespace dbn {
 			Factor estimate = variable_elimination(ordering, unrolled_factors).normalize();
 			unordered_map<unsigned,const Variable *> renaming_back;
 			const Domain &estimate_domain = estimate.domain();
-			for (unsigned i = 0; i < estimate_domain.width(); ++i) {
+			const unsigned estimate_width = estimate_domain.width();
+			for (unsigned i = 0; i < estimate_width; ++i) {
 				unsigned var_id = estimate_domain[i]->id();
 				for (auto it_renaming : renaming) {
 					unsigned id_from = it_renaming.first;
