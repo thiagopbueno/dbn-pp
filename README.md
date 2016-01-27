@@ -14,7 +14,7 @@ Algorithms implemented in this version:
 
 The overall structure used for variable, factor and domain representation is highly inspired by the [kpu-pp project](https://github.com/denismaua/kpu-pp).
 
-Inputs are accepted in the format .duai (uai extended model for dynamic nets). See below for more details.
+Inputs are accepted in format .duai (uai extended model for dynamic nets). See below for more details.
 
 ## Installation
 
@@ -82,9 +82,10 @@ where the constants are such that:
 
 * N is the total number of variables
 * T is the total number of variables in the 2TBN model
-* S is the total numver of variables in the sensor model
+* S is the total number of variables in the sensor model
 
-Please note that N = T + S.
+Please note that N >= T + S. In case of internal nodes in the intra-slice model, N > T + S; and in case of models with no internal nodes, N = T + S.
+
 The width of a factor refers to the cardinality of its scope/domain and its size is the number of possible instantiations of its scope/domain variables.
 
 Comments are allowed anywhere and start with '#' sign and go until the end of the line. Whitespaces are ignored.
