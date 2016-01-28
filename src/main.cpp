@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
             cout << model << ";";
             cout << 1 << ";";
             cout << T << ";";
-            cout << interface_width << ";" << observation_width << ";";
+            cout << nvariables << ";" << interface_width << ";" << observation_width << ";" << internals_width << ";";
             cout << chrono::duration <double, milli> (diff).count() << ";";
             cout << chrono::duration <double, milli> (diff).count() / T << endl;
         }
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
             cout << model << ";";
             cout << 2 << ";";
             cout << T << ";";
-            cout << interface_width << ";" << observation_width << ";";
+            cout << nvariables << ";" << interface_width << ";" << observation_width << ";" << internals_width << ";";
             cout << chrono::duration <double, milli> (diff).count() << ";";
             cout << chrono::duration <double, milli> (diff).count() / T << endl;
         }
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
             cout << model << ";";
             cout << 3 << ";";
             cout << T << ";";
-            cout << interface_width << ";" << observation_width << ";";
+            cout << nvariables << ";" << interface_width << ";" << observation_width << ";" << internals_width << ";";
             cout << chrono::duration <double, milli> (diff).count() << ";";
             cout << chrono::duration <double, milli> (diff).count() / T << endl;
         }
