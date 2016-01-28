@@ -33,6 +33,19 @@ def run(inputs, gates, health, observations, output_filename):
 	os.remove(filename + ".duai.evid")
 
 
+def benchmark_sensor(observations, gates, health, models):
+	print(">> Running benchmark_sensor ...")
+
+	output_filename = "benchmarks-sensor.txt"
+	if os.path.isfile(output_filename):
+		os.remove(output_filename)
+
+	gates = 17
+	for inputs in range(3,gates+1):
+		for i in range(models):
+			run(inputs, gates, health, observations, output_filename)
+
+
 def benchmark_interface(observations, inputs, models):
 	print(">> Running benchmark_interface ...")
 
@@ -46,18 +59,6 @@ def benchmark_interface(observations, inputs, models):
 			run(inputs, gates, health, observations, output_filename)
 
 
-def benchmark_sensor(observations, gates, health, models):
-	print(">> Running benchmark_sensor ...")
-
-	output_filename = "benchmarks-sensor.txt"
-	if os.path.isfile(output_filename):
-		os.remove(output_filename)
-
-	for inputs in range(3,gates+1):
-		for i in range(models):
-			run(inputs, gates, health, observations, output_filename)
-
-
 def benchmark_timeslices(inputs, gates, health, models):
 	print(">> Running benchmark_timeslices ...")
 
@@ -65,7 +66,7 @@ def benchmark_timeslices(inputs, gates, health, models):
 	if os.path.isfile(output_filename):
 		os.remove(output_filename)
 
-	for observations in range(50,251,50):
+	for observations in range(50,501,50):
 		for i in range(models):
 			run(inputs, gates, health, observations, output_filename)
 
@@ -77,8 +78,8 @@ if __name__ == '__main__':
 	inputs = 5
 	gates = 20
 	health = 5
-	models = 5
+	models = 10
 
 	benchmark_sensor(observations, gates, health, models)
 	benchmark_interface(observations, inputs, models)
-	benchmark_timeslices(inputs, 20, 10, models)
+	benchmark_timeslices(10, gates, 7, models)
