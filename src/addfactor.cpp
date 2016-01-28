@@ -19,6 +19,7 @@
 #include "addfactor.h"
 #include "domain.h"
 #include "cudd.h"
+#include "cuddObj.hh"
 
 #include <cstdio>
 #include <iostream>
@@ -28,6 +29,16 @@ using namespace std;
 namespace dbn {
 
 	Cudd ADDFactor::mgr(0,0);
+
+	void ADDFactor::set_mgr_reordering(int *permutation) {
+		if (!permutation) {
+			mgr.AutodynEnable();
+			// mgr.AutodynDisable();
+		}
+		else {
+			mgr.ShuffleHeap(permutation);
+		}
+	}
 
 	ADDFactor::ADDFactor(const string &output, double value) :
 		_dd(mgr.constant(value)),

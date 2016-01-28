@@ -298,6 +298,17 @@ namespace dbn {
 		unordered_map<unsigned,const Variable*> &transition,
 		vector<unordered_map<unsigned,unsigned>> &observations)
 	{
+
+		ADDFactor::set_mgr_reordering();
+
+		// unsigned sz = variables.size();
+		// int *permutation = new int[sz];
+		// for (unsigned i = 0; i < sz; ++i) {
+		// 	permutation[i] = variables[i]->id();
+		// }
+		// ADDFactor::set_mgr_reordering(permutation);
+		// delete[] permutation;
+
 		// estimates
 		vector<shared_ptr<ADDFactor>> estimates;
 

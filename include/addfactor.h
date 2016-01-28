@@ -32,6 +32,9 @@ namespace dbn {
 
 	class ADDFactor {
 	public:
+		static Cudd mgr;
+		static void set_mgr_reordering(int *permutation = nullptr);
+
 		ADDFactor(const std::string &output = "T", double value = 1.0);
 		ADDFactor(const std::string &output, const Factor &factor);
 		ADDFactor(const std::string &output, const ADD &dd, const Domain &domain);
@@ -60,8 +63,6 @@ namespace dbn {
 		friend std::ostream &operator<<(std::ostream& o, const ADDFactor &f);
 
 	private:
-		static Cudd mgr;
-
 		ADD _dd;
 		std::string _output;
 		std::unique_ptr<Domain> _domain;
