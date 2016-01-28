@@ -42,7 +42,11 @@ def domain(inputs, gates, health):
 	health_vars = list(range(health))
 	random.shuffle(health_vars)
 
+	input_vars = list(range(inputs))
+	random.shuffle(input_vars)
+
 	health_index = 0
+	input_index = 0
 	for j in range(inputs, inputs+gates-1):
 		domain = []
 
@@ -60,7 +64,8 @@ def domain(inputs, gates, health):
 
 		if fan_in == 2:
 			# first gate input from input wires
-			gate_input = random.randint(0, inputs-1)
+			gate_input = input_vars[input_index]
+			input_index = (input_index + 1) % inputs
 			domain.append(gate_input)
 
 			# second gate input random
@@ -69,7 +74,9 @@ def domain(inputs, gates, health):
 				gate_input = random.randint(0, j-1)
 			domain.append(gate_input)
 		elif fan_in == 1:
-			gate_input = random.randint(0, j-1)
+			# gate_input = random.randint(0, j-1)
+			gate_input = input_vars[input_index]
+			input_index = (input_index + 1) % inputs
 			domain.append(gate_input)
 
 		# gate health variable
