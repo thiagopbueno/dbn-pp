@@ -32,8 +32,8 @@ namespace dbn {
 
 	void ADDFactor::set_mgr_reordering(int *permutation) {
 		if (!permutation) {
-			mgr.AutodynEnable();
-			// mgr.AutodynDisable();
+			// mgr.AutodynEnable();
+			mgr.AutodynDisable();
 		}
 		else {
 			mgr.ShuffleHeap(permutation);
