@@ -109,6 +109,10 @@ namespace dbn {
 		return _output;
 	}
 
+	const Domain &ADDFactor::domain() const {
+		return *_domain;
+	}
+
 	double ADDFactor::partition() const {
 		int width = _domain->width();
 		int size = _domain->size();
@@ -119,6 +123,12 @@ namespace dbn {
 			_domain->next_instantiation(inst);
 		}
 		return partition;
+	}
+
+	double ADDFactor::compactation() const {
+		int nodes = _dd.nodeCount();
+		int max_nodes = 2*_domain->size() - 1;
+		return 1.0 - 1.0 * nodes/max_nodes;
 	}
 
 	ADDFactor ADDFactor::change_variables(unordered_map<unsigned,const Variable*> renaming) {
@@ -250,18 +260,19 @@ namespace dbn {
 		return !result;
 	}
 
-
 	ostream &operator<<(ostream& os, const ADDFactor &f) {
 
 		const Domain &domain = f.domain();
 		int width = domain.width();
 		int size = domain.size();
 
-		// os << "ADDFactor: " << f._output << "" << endl;
-		os << "Factor(";
+		os << "ADDFactor(";
 		os << "output = " << f._output << ", ";
 		os << "width = " << width << ", ";
 		os << "size = " << size << ", ";
+		os << "nodes = " << f._dd.nodeCount() << ", ";
+		// os << "max_nodes = " << 2*size - 1 << ", ";
+		os << "compactation = " << f.compactation() * 100 << "%, ";
 		os << "partition = " << f.partition() << ")" << endl;
 
 		// scope
@@ -311,4 +322,3 @@ namespace dbn {
 		return os;
 	}
 }
-

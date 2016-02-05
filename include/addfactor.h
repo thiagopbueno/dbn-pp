@@ -44,10 +44,13 @@ namespace dbn {
 		ADDFactor &operator=(ADDFactor &&f);
 		ADDFactor operator*(const ADDFactor &f);
 		void operator*=(const ADDFactor &f);
+		double operator[](std::vector<unsigned> instantiation) const;
 
 		std::string output() const;
+		const Domain &domain() const;
+
 		double partition() const;
-		const Domain &domain() const { return *_domain; };
+		double compactation() const;
 
 		ADDFactor change_variables(std::unordered_map<unsigned,const Variable*> renaming);
 		bool in_scope(const Variable *variable) const;
@@ -56,8 +59,6 @@ namespace dbn {
 		ADDFactor product(const ADDFactor &f) const;
 		ADDFactor normalize() const;
 		ADDFactor conditioning(const std::unordered_map<unsigned,unsigned> &evidence) const;
-
-		double operator[](std::vector<unsigned> instantiation) const;
 
 		int dump_dot(std::string filename) const;
 		friend std::ostream &operator<<(std::ostream& o, const ADDFactor &f);

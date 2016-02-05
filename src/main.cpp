@@ -45,7 +45,7 @@ void print_model(
 void print_observations(vector<unordered_map<unsigned,unsigned>> &observations);
 
 template<class T>
-void print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables);
+void print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables, bool verbose = false);
 
 int main(int argc, char *argv[])
 {
@@ -129,7 +129,8 @@ int main(int argc, char *argv[])
             cout << T << ";";
             cout << nvariables << ";" << interface_width << ";" << observation_width << ";" << internals_width << ";";
             cout << chrono::duration <double, milli> (diff).count() << ";";
-            cout << chrono::duration <double, milli> (diff).count() / T << endl;
+            cout << chrono::duration <double, milli> (diff).count() / T << ";";
+            cout << 0.0 << ";" << 0.0 << ";" << endl;
         }
     }
 
@@ -152,7 +153,8 @@ int main(int argc, char *argv[])
             cout << T << ";";
             cout << nvariables << ";" << interface_width << ";" << observation_width << ";" << internals_width << ";";
             cout << chrono::duration <double, milli> (diff).count() << ";";
-            cout << chrono::duration <double, milli> (diff).count() / T << endl;
+            cout << chrono::duration <double, milli> (diff).count() / T << ";";
+            cout << 0.0 << ";" << 0.0 << ";" << endl;
         }
     }
 
@@ -175,7 +177,16 @@ int main(int argc, char *argv[])
             cout << T << ";";
             cout << nvariables << ";" << interface_width << ";" << observation_width << ";" << internals_width << ";";
             cout << chrono::duration <double, milli> (diff).count() << ";";
-            cout << chrono::duration <double, milli> (diff).count() / T << endl;
+            cout << chrono::duration <double, milli> (diff).count() / T << ";";
+
+            double avg_compactation = 0.0, max_compactation = 0.0;
+            for (auto &pf : states3) {
+                double c = pf->compactation();
+                avg_compactation += c;
+                max_compactation = (max_compactation < c ? c : max_compactation);
+            }
+            avg_compactation /= T;
+            cout << avg_compactation << ";" << max_compactation << ";" << endl;
         }
     }
 
@@ -286,7 +297,7 @@ print_observations(vector<unordered_map<unsigned,unsigned>> &observations)
 
 template<class T>
 void
-print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables)
+print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables, bool verbose)
 {
 
     unsigned timeslices = states.size();
@@ -344,4 +355,10 @@ print_trajectory(vector<shared_ptr<T>> &states, set<unsigned> &state_variables)
         domain.next_instantiation(inst);
     }
     cout << endl;
+
+    if (verbose) {
+        for (auto const& pf : states) {
+            cout << *pf << endl;
+        }
+    }
 }
